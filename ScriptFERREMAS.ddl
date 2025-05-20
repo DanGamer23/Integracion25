@@ -83,7 +83,7 @@ CREATE TABLE CLIENTE
      ap_paterno VARCHAR2 (20)  NOT NULL , 
      ap_materno VARCHAR2 (20) , 
      correo     VARCHAR2 (50)  NOT NULL , 
-     teléfono   NUMBER (10)  NOT NULL , 
+     telefono   NUMBER (10)  NOT NULL , 
      contrasena VARCHAR2 (20)  NOT NULL 
     ) 
 ;
@@ -365,7 +365,9 @@ ALTER TABLE REPORTE_VENTAS
     ) 
 ;
 
+INSERT INTO CLIENTE VALUES ( '1', 'Daniel', 'Ivan', 'Parada','Badilla','example@gmail.com',912345678,'contrasena123.'  );
+
 INSERT INTO ADMINISTRADOR (id_admin, nombre_usuario, contrasena)
 VALUES (1, 'LuisValdivia', '12345678-9');
-
-
+ 
+ COMMIT;
