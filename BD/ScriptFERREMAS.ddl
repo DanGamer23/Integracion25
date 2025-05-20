@@ -370,4 +370,4 @@ INSERT INTO CLIENTE VALUES ( '1', 'Daniel', 'Ivan', 'Parada','Badilla','example@
 INSERT INTO ADMINISTRADOR (id_admin, nombre_usuario, contrasena)
 VALUES (1, 'LuisValdivia', '12345678-9');
  
- COMMIT;
+COMMIT;
