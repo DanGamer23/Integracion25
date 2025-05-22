@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from API1.database import get_conexion
+from database import get_conexion
 
 
 router = APIRouter(

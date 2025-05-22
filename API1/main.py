@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from API1.routers import clientes
+from routers import clientes
 
 app = FastAPI(
     title="API de gestion de clientes",
