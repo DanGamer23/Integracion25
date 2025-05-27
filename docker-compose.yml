@@ -50,6 +50,28 @@ services:
         condition: service_healthy
     environment: {}
 
+  #Django
+  django:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: django-container
+    ports:
+      - "8001:8000"
+    depends_on:
+        ferremas-api2:
+          condition: service_started
+        ferremas-api1:
+          condition: service_started
+    environment:
+      DJANGO_SETTINGS_MODULE: ferremas.settings
+      DEBUG: 'True'
+      ALLOWED_HOSTS: 'localhost,127.0.0.1,django-container'
+      API1_URL: http://ferremas-api1:8000
+      API2_URL: http://ferremas-api2:8080
+    volumes:
+        - ./web:/app/web
+
 volumes:
   oracle-data:
     driver: local

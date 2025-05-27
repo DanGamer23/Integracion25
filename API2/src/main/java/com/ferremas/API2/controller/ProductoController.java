@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/productos")
@@ -16,11 +17,25 @@ public class ProductoController {
     @Autowired
     private ProductoRepository productoRepository;
 
-    // GET: Obtener todos los productos
+    // GET: Obtener todos los productos, o una cantidad específica
+    // Si se proporciona un parámetro de consulta "cantidad", se limita la cantidad de productos devueltos
     @GetMapping
-    public List<Producto> obtenerProductos() {
-        return productoRepository.findAll();
+    public List<Producto> obtenerProductos(@RequestParam(required = false) Optional<Integer> limit) {
+        if (limit.isPresent()) {
+            List<Producto> allProducts = productoRepository.findAll();
+            int limitValue = limit.get();
+            if (limitValue > 0 && limitValue < allProducts.size()) {
+                return allProducts.subList(0, limitValue);
+            } else {
+                // Si el límite es inválido o mayor que el total, devolvemos todos.
+                return allProducts;
+            }
+        } else {
+            // Si el parámetro 'limit' no está presente, devolvemos todos los productos (comportamiento actual)
+            return productoRepository.findAll();
+        }
     }
+    
     // GET: Obtener un producto por ID
     @GetMapping("/{id}")
     public Producto obtenerProductoPorId(@PathVariable Long id) {
