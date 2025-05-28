@@ -208,166 +208,33 @@
 
 
         <!-- categoria de tienda 1 al 5-->
-        <div class="container-fluid fruite py-5">
-            <div class="container py-5">
-                <div class="tab-class text-center">
-                    <div class="row g-4">
-                        <div class="col-lg-4 text-start">
-                            <h1>Herramientas de Ferremax</h1>
+            <div class="container-fluid fruite py-5">
+                <div class="container py-5">
+                    <div class="tab-class text-center">
+                        <div class="row g-4">
+                            <div class="col-lg-4 text-start">
+                                <h1>Herramientas de Ferremax</h1>
+                            </div>
+                            <div class="col-lg-8 text-end">
+                                <ul class="nav nav-pills d-inline-flex text-center mb-5">
+                                    <li class="nav-item">
+                                        <a class="d-flex m-2 py-2 bg-light rounded-pill" href="{% url 'shop' %}">
+                                            <span class="text-dark" style="width: 130px;">Ver todo</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <div class="col-lg-8 text-end">
-                            <ul class="nav nav-pills d-inline-flex text-center mb-5">
-                                <li class="nav-item">
-                                    {# Eliminado data-bs-toggle="pill" y la clase "active" si no es para resaltar la página actual #}
-                                    <a class="d-flex m-2 py-2 bg-light rounded-pill" href="{% url 'shop' %}">
-                                        <span class="text-dark" style="width: 130px;">Ver todo</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="tab-content">
-                        <div id="tab-1" class="tab-pane fade show p-0 active">
-                            <div class="row g-4">
-                                <div class="col-lg-12">
-                                    <div class="row g-4">
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/pelador stan.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>Pelador</h4>
-                                                    <p>pelador staley de alta calidad americana pela cable 2.5mm 3.5mm 4.5mm 5.5mmm </p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$3000 clp</p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/motocierra maki.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>motosierra</h4>
-                                                    <p>motosierra makita main japon corta tronco de 100mm </p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$300.000 clp
-                                                        </p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/martillo sta.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>martillo</h4>
-                                                    <p>martillo staley de alta calidad </p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$20.000 clp</p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/maleta stan.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>maleta</h4>
-                                                    <p>maleta de 40l resintencia militar y para la contrucion protejiendo todas tus herramientas para un dia laboral</p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$120.000 clp</p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/maleta simple stan.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>maleta simple</h4>
-                                                    <p>maleta de 5l resintencia militar y para la contrucion protejiendo todas tus herramientas para un dia laboral</p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$30.000 clp</p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/llave indu mil.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>llave de impacto</h4>
-                                                    <p>llave de impcto calidad indutrial hasta dado de 32mm para cambiar ruedas de camion y de auto 1000nm</p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$600.000 clp</p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/llave impacto stan.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>llave impacto</h4>
-                                                    <p>llave de impcto calidad indutrial hasta dado de 24mm para cambiar ruedas de camion y de auto 100nm</p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$400.000 clp</p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 col-lg-4 col-xl-3">
-                                            <div class="rounded position-relative fruite-item">
-                                                <div class="fruite-img">
-                                                    <img src="img/imagen web/llave impacto mil.png" class="img-fluid w-100 rounded-top" alt="">
-                                                </div>
-                                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">herramientas</div>
-                                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                    <h4>llave de impacto</h4>
-                                                    <p>llave de impcto calidad eeuu hasta dado de 24mm para cambiar ruedas de camion y de auto 250nm</p>
-                                                    <div class="d-flex justify-content-between flex-lg-wrap">
-                                                        <p class="text-dark fs-5 fw-bold mb-0">$300.000clp</p>
-                                                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> agregar al carrito</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div class="tab-content">
+                            <div id="tab-1" class="tab-pane fade show p-0 active">
+                                <div class="row g-4" id="productos-container">
                                     </div>
-                                </div>
                             </div>
                         </div>
                     </div>
-                </div>      
+                </div>
             </div>
-        </div>
+            <script src="{% static 'js/load_products.js' %}"></script>
         <!-- Fruits Shop End-->
 
 

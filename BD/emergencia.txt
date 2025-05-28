@@ -1,0 +1,8 @@
+@/opt/oracle/scripts/setup/01_create_ferremas_user.sql
+
+passwords:
+        "colocolo1",
+        "123456",
+        "Pikachu23",
+        "Chile2015.",
+        "56789012-3"

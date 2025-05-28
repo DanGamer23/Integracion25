@@ -1,10 +1,24 @@
-FROM openjdk:17-jdk-slim
+# Etapa de construcción
+FROM openjdk:17-jdk-slim AS build
 
-# Establecer el directorio de trabajo
 WORKDIR /app
-# Copiar el archivo JAR de la aplicación al contenedor
-COPY target/*.jar app.jar
-# Exponer el puerto en el que la aplicación escuchará
+
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+# COPY lib lib         # <-- COMENTA O ELIMINA ESTA LÍNEA
+COPY src src
+
+RUN chmod +x mvnw
+RUN ./mvnw package -DskipTests
+
+# Etapa final
+FROM openjdk:17-slim
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
-# Comando para ejecutar la aplicación
-CMD ["java", "-jar", "app.jar"]
+
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-jar", "app.jar"]

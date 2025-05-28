@@ -1,376 +1,281 @@
 SET SERVEROUTPUT ON; 
 ALTER SESSION SET CURRENT_SCHEMA = FERREMAS;
 
-DROP TABLE ADMINISTRADOR CASCADE CONSTRAINTS 
-;
-
-DROP TABLE BODEGUERO CASCADE CONSTRAINTS 
-;
-
-DROP TABLE CARRITO CASCADE CONSTRAINTS 
-;
-
-DROP TABLE CLIENTE CASCADE CONSTRAINTS 
-;
-
-DROP TABLE CONTADOR CASCADE CONSTRAINTS 
-;
-
-DROP TABLE DETALLE_CARRITO CASCADE CONSTRAINTS 
-;
-
-DROP TABLE DETALLE_PEDIDO CASCADE CONSTRAINTS 
-;
-
-DROP TABLE ENTREGA CASCADE CONSTRAINTS 
-;
-
-DROP TABLE PAGO CASCADE CONSTRAINTS 
-;
-
-DROP TABLE PEDIDO CASCADE CONSTRAINTS 
-;
-
-DROP TABLE PRODUCTO CASCADE CONSTRAINTS 
-;
-
-DROP TABLE REPORTE_VENTAS CASCADE CONSTRAINTS 
-;
-
-DROP TABLE VENDEDOR CASCADE CONSTRAINTS 
-;
+DROP SEQUENCE seq_usuario_id;
+DROP SEQUENCE PRODUCTO_SEQ;
+DROP TABLE PAGO CASCADE CONSTRAINTS;
+DROP TABLE DETALLE_PEDIDO CASCADE CONSTRAINTS;
+DROP TABLE PEDIDO CASCADE CONSTRAINTS;
+DROP TABLE PRODUCTO CASCADE CONSTRAINTS;
+DROP TABLE ESTADO CASCADE CONSTRAINTS;
+DROP TABLE USUARIO CASCADE CONSTRAINTS;
+DROP TABLE METODO_PAGO CASCADE CONSTRAINTS;
+DROP TABLE ESTADO_PAGO CASCADE CONSTRAINTS;
+DROP TABLE CATEGORIA CASCADE CONSTRAINTS;
+DROP TABLE MARCA CASCADE CONSTRAINTS;
+DROP TABLE ROL CASCADE CONSTRAINTS;
 
 
-CREATE TABLE ADMINISTRADOR 
-    ( 
-     id_admin       VARCHAR2 (50)  NOT NULL , 
-     nombre_usuario VARCHAR2 (50)  NOT NULL , 
-     contrasena     VARCHAR2 (20)  NOT NULL 
-    ) 
-;
+CREATE SEQUENCE seq_usuario_id
+START WITH 6
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
 
-ALTER TABLE ADMINISTRADOR 
-    ADD CONSTRAINT ADMINISTRADOR_PK PRIMARY KEY ( id_admin ) ;
+CREATE SEQUENCE PRODUCTO_SEQ
+START WITH 26
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
 
-CREATE TABLE BODEGUERO 
-    ( 
-     id_bodeguero VARCHAR2 (50)  NOT NULL , 
-     p_nombre     VARCHAR2 (20)  NOT NULL , 
-     s_nombre     VARCHAR2 (20) , 
-     ap_paterno   VARCHAR2 (20)  NOT NULL , 
-     ap_materno   VARCHAR2 (20) , 
-     correo       VARCHAR2 (80)  NOT NULL , 
-     contrasena   VARCHAR2 (20)  NOT NULL 
-    ) 
-;
+-- Tabla ROL
+CREATE TABLE ROL (
+    rol_id NUMBER(1) PRIMARY KEY,
+    nombre VARCHAR2(50) NOT NULL
+);
 
-ALTER TABLE BODEGUERO 
-    ADD CONSTRAINT BODEGUERO_PK PRIMARY KEY ( id_bodeguero ) ;
+-- Tabla MARCA
+CREATE TABLE MARCA (
+    marca_id NUMBER(10) PRIMARY KEY,
+    nombre VARCHAR2(100) NOT NULL
+);
 
-CREATE TABLE CARRITO 
-    ( 
-     id_carrito         VARCHAR2 (50)  NOT NULL , 
-     fecha_creacion     DATE  NOT NULL , 
-     CLIENTE_id_cliente VARCHAR2 (50)  NOT NULL 
-    ) 
-;
+-- Tabla CATEGORIA
+CREATE TABLE CATEGORIA (
+    categoria_id NUMBER(10) PRIMARY KEY,
+    nombre VARCHAR2(1000) NOT NULL
+);
 
-ALTER TABLE CARRITO 
-    ADD CONSTRAINT CARRITO_PK PRIMARY KEY ( id_carrito ) ;
+-- Tabla ESTADO_PAGO
+CREATE TABLE ESTADO_PAGO (
+    estado_pago_id NUMBER(10) PRIMARY KEY,
+    nombre VARCHAR2(100) NOT NULL
+);
 
-CREATE TABLE CLIENTE 
-    ( 
-     id_cliente VARCHAR2 (50)  NOT NULL , 
-     p_nombre   VARCHAR2 (50)  NOT NULL , 
-     s_nombre   VARCHAR2 (20) , 
-     ap_paterno VARCHAR2 (20)  NOT NULL , 
-     ap_materno VARCHAR2 (20) , 
-     correo     VARCHAR2 (50)  NOT NULL , 
-     telefono   NUMBER (10)  NOT NULL , 
-     contrasena VARCHAR2 (20)  NOT NULL 
-    ) 
-;
+-- Tabla METODO_PAGO
+CREATE TABLE METODO_PAGO (
+    metodo_pago NUMBER(10) PRIMARY KEY,
+    nombre VARCHAR2(100) NOT NULL
+);
 
-ALTER TABLE CLIENTE 
-    ADD CONSTRAINT CLIENTE_PK PRIMARY KEY ( id_cliente ) ;
+-- Tabla CARRITO
+CREATE TABLE CARRITO (
+    carrito_id NUMBER(10) PRIMARY KEY,
+    usuario_id NUMBER(10) NOT NULL,
+    fecha DATE DEFAULT SYSDATE NOT NULL,
+    total NUMBER(10) DEFAULT 0 NOT NULL,
+    CONSTRAINT CARRITO_USUARIO_FK FOREIGN KEY (usuario_id) 
+        REFERENCES USUARIO(id_usuario) ON DELETE CASCADE
+);
 
-CREATE TABLE CONTADOR 
-    ( 
-     id_contador VARCHAR2 (50)  NOT NULL , 
-     p_nombre    VARCHAR2 (20)  NOT NULL , 
-     s_nombre    VARCHAR2 (20) , 
-     ap_paterno  VARCHAR2 (20)  NOT NULL , 
-     ap_materno  VARCHAR2 (20) , 
-     correo      VARCHAR2 (80)  NOT NULL , 
-     contrasena  VARCHAR2 (20)  NOT NULL 
-    ) 
-;
+-- Tabla USUARIO
+CREATE TABLE USUARIO (
+    id_usuario NUMBER(10) PRIMARY KEY,
+    rut CHAR(12) NOT NULL UNIQUE,
+    nombre VARCHAR2(100) NOT NULL,
+    apellido_p VARCHAR2(100) NOT NULL,
+    apellido_m VARCHAR2(100),
+    snombre VARCHAR2(100),
+    email VARCHAR2(100) NOT NULL UNIQUE,
+    fono VARCHAR2(20),
+    direccion VARCHAR2(200),
+    password VARCHAR2(200) NOT NULL,
+    rol_id number(1) NOT NULL,
+    CONSTRAINT USUARIO_ROL_FK FOREIGN KEY (rol_id)
+	REFERENCES ROL(rol_id) ON DELETE CASCADE
+);
 
-ALTER TABLE CONTADOR 
-    ADD CONSTRAINT CONTADOR_PK PRIMARY KEY ( id_contador ) ;
+-- Tabla ESTADO
+CREATE TABLE ESTADO (
+    estado_id NUMBER(10) PRIMARY KEY,
+    nombre VARCHAR2(100) NOT NULL
+);
 
-CREATE TABLE DETALLE_CARRITO 
-    ( 
-     id_detalle           VARCHAR2 (50)  NOT NULL , 
-     cantidad             NUMBER  NOT NULL , 
-     CARRITO_id_carrito   VARCHAR2 (50)  NOT NULL , 
-     PRODUCTO_id_producto VARCHAR2 (50)  NOT NULL 
-    ) 
-;
 
-ALTER TABLE DETALLE_CARRITO 
-    ADD CONSTRAINT DETALLE_CARRITO_PK PRIMARY KEY ( id_detalle ) ;
+-- Tabla PRODUCTO
+CREATE TABLE PRODUCTO (
+    producto_id NUMBER(10) PRIMARY KEY,
+    nombre VARCHAR2(100) NOT NULL,
+    descripcion VARCHAR2(300),
+    precio NUMBER(10) NOT NULL,
+    categoria_id NUMBER(10) NOT NULL,
+    marca_id NUMBER(10) NOT NULL,
+    imagen VARCHAR2(1000),
+    CONSTRAINT PRODUCTO_CATEGORIA_FK FOREIGN KEY (categoria_id) 
+        REFERENCES CATEGORIA(categoria_id) ON DELETE CASCADE,
+    CONSTRAINT PRODUCTO_MARCA_FK FOREIGN KEY (marca_id) 
+        REFERENCES MARCA(marca_id) ON DELETE CASCADE
+);
 
-CREATE TABLE DETALLE_PEDIDO 
-    ( 
-     id_detalle           VARCHAR2 (50)  NOT NULL , 
-     cantidad             NUMBER  NOT NULL , 
-     precio               NUMBER  NOT NULL , 
-     PEDIDO_id_pedido     VARCHAR2 (50)  NOT NULL , 
-     PRODUCTO_id_producto VARCHAR2 (50)  NOT NULL 
-    ) 
-;
+-- Tabla PEDIDO
+CREATE TABLE PEDIDO (
+    pedido_id NUMBER(10) PRIMARY KEY,
+    cliente_id NUMBER(10) NOT NULL,
+    fecha_pedido DATE DEFAULT SYSDATE NOT NULL,
+    estado_id NUMBER(10) NOT NULL,
+    sucursal_retiro NUMBER(10),
+    total NUMBER(10) NOT NULL,
+    vendedor_id NUMBER(10) NOT NULL,
+    CONSTRAINT PEDIDO_ESTADO_FK FOREIGN KEY (estado_id) 
+        REFERENCES ESTADO(estado_id) ON DELETE CASCADE,
+    CONSTRAINT PEDIDO_USUARIO_FK FOREIGN KEY (cliente_id) 
+        REFERENCES USUARIO(id_usuario) ON DELETE CASCADE,
+    CONSTRAINT PEDIDO_VENDEDOR_FK FOREIGN KEY (vendedor_id) 
+        REFERENCES USUARIO(id_usuario) ON DELETE CASCADE
+);
 
-ALTER TABLE DETALLE_PEDIDO 
-    ADD CONSTRAINT DETALLE_PEDIDO_PK PRIMARY KEY ( id_detalle ) ;
+-- Tabla DETALLE_PEDIDO
+CREATE TABLE DETALLE_PEDIDO (
+    detalle_id NUMBER(10) PRIMARY KEY,
+    pedido_id NUMBER(10) NOT NULL,
+    producto_id NUMBER(10) NOT NULL,
+    cantidad NUMBER(10) NOT NULL,
+    precio_unit NUMBER(10) NOT NULL,
+    CONSTRAINT DETALLE_PEDIDO_PRODUCTO_FK FOREIGN KEY (producto_id) 
+        REFERENCES PRODUCTO(producto_id) ON DELETE CASCADE,
+    CONSTRAINT DETALLE_PEDIDO_PEDIDO_FK FOREIGN KEY (pedido_id) 
+        REFERENCES PEDIDO(pedido_id) ON DELETE CASCADE
+);
 
-CREATE TABLE ENTREGA 
-    ( 
-     id_entrega             VARCHAR2 (50)  NOT NULL , 
-     fecha_entrega          DATE  NOT NULL , 
-     tipo_entrega           VARCHAR2 (50)  NOT NULL , 
-     PEDIDO_id_pedido       VARCHAR2 (50)  NOT NULL , 
-     BODEGUERO_id_bodeguero VARCHAR2 (50)  NOT NULL , 
-     CONTADOR_id_contador   VARCHAR2 (50)  NOT NULL 
-    ) 
-;
-CREATE UNIQUE INDEX ENTREGA__IDX ON ENTREGA 
-    ( 
-     PEDIDO_id_pedido ASC 
-    ) 
-;
+-- Tabla PAGO
+CREATE TABLE PAGO (
+    pago_id NUMBER(10) PRIMARY KEY,
+    pedido_id NUMBER(10) NOT NULL,
+    metodo_pago_id NUMBER(10) NOT NULL,
+    monto NUMBER(10) NOT NULL,
+    fecha_pago DATE DEFAULT SYSDATE NOT NULL,
+    estado_pago_id NUMBER(10) NOT NULL,
+    transaccion_id VARCHAR2(200),
+    detalle VARCHAR2(200),
+    contador_id NUMBER(10),
+    CONSTRAINT PAGO_PEDIDO_FK FOREIGN KEY (pedido_id) 
+        REFERENCES PEDIDO(pedido_id) ON DELETE CASCADE,
+    CONSTRAINT PAGO_METODO_PAGO_FK FOREIGN KEY (metodo_pago_id) 
+        REFERENCES METODO_PAGO(metodo_pago) ON DELETE CASCADE,
+    CONSTRAINT PAGO_ESTADO_PAGO_FK FOREIGN KEY (estado_pago_id) 
+        REFERENCES ESTADO_PAGO(estado_pago_id) ON DELETE CASCADE,
+    CONSTRAINT PAGO_USUARIO_FK FOREIGN KEY (contador_id) 
+        REFERENCES USUARIO(id_usuario) ON DELETE SET NULL
+);
 
-ALTER TABLE ENTREGA 
-    ADD CONSTRAINT ENTREGA_PK PRIMARY KEY ( id_entrega ) ;
-
-CREATE TABLE PAGO 
-    ( 
-     id_pago              VARCHAR2 (50)  NOT NULL , 
-     fecha_pago           DATE  NOT NULL , 
-     monto                NUMBER  NOT NULL , 
-     metodo_pago          VARCHAR2 (40)  NOT NULL , 
-     PEDIDO_id_pedido     VARCHAR2 (50)  NOT NULL , 
-     CONTADOR_id_contador VARCHAR2 (50)  NOT NULL 
-    ) 
-;
-CREATE UNIQUE INDEX PAGO__IDX ON PAGO 
-    ( 
-     PEDIDO_id_pedido ASC 
-    ) 
-;
-
-ALTER TABLE PAGO 
-    ADD CONSTRAINT PAGO_PK PRIMARY KEY ( id_pago ) ;
-
-CREATE TABLE PEDIDO 
-    ( 
-     id_pedido            VARCHAR2 (50)  NOT NULL , 
-     fecha                DATE  NOT NULL , 
-     estado               VARCHAR2 (50)  NOT NULL , 
-     CLIENTE_id_cliente   VARCHAR2 (50)  NOT NULL , 
-     VENDEDOR_id_vendedor VARCHAR2 (50)  NOT NULL 
-    ) 
-;
-
-ALTER TABLE PEDIDO 
-    ADD CONSTRAINT PEDIDO_PK PRIMARY KEY ( id_pedido ) ;
-
-CREATE TABLE PRODUCTO 
-    ( 
-     id_producto VARCHAR2 (50)  NOT NULL , 
-     nombre      VARCHAR2 (80)  NOT NULL , 
-     descripcion VARCHAR2 (500)  NOT NULL , 
-     precio      NUMBER  NOT NULL , 
-     stock       NUMBER  NOT NULL 
-    ) 
-;
-
-ALTER TABLE PRODUCTO 
-    ADD CONSTRAINT PRODUCTO_PK PRIMARY KEY ( id_producto ) ;
-
-CREATE TABLE REPORTE_VENTAS 
-    ( 
-     id_reporte             VARCHAR2 (50)  NOT NULL , 
-     fecha                  DATE  NOT NULL , 
-     total_ventas           NUMBER  NOT NULL , 
-     ADMINISTRADOR_id_admin VARCHAR2 (50)  NOT NULL 
-    ) 
-;
-
-ALTER TABLE REPORTE_VENTAS 
-    ADD CONSTRAINT REPORTE_VENTAS_PK PRIMARY KEY ( id_reporte ) ;
-
-CREATE TABLE VENDEDOR 
-    ( 
-     id_vendedor VARCHAR2 (50)  NOT NULL , 
-     p_nombre    VARCHAR2 (20)  NOT NULL , 
-     s_nombre    VARCHAR2 (20) , 
-     ap_paterno  VARCHAR2 (20)  NOT NULL , 
-     ap_materno  VARCHAR2 (20) , 
-     correo      VARCHAR2 (80)  NOT NULL , 
-     contrasena  VARCHAR2 (20)  NOT NULL 
-    ) 
-;
-
-ALTER TABLE VENDEDOR 
-    ADD CONSTRAINT VENDEDOR_PK PRIMARY KEY ( id_vendedor ) ;
-
-ALTER TABLE CARRITO 
-    ADD CONSTRAINT CARRITO_CLIENTE_FK FOREIGN KEY 
-    ( 
-     CLIENTE_id_cliente
-    ) 
-    REFERENCES CLIENTE 
-    ( 
-     id_cliente
-    ) 
-;
-
-ALTER TABLE DETALLE_CARRITO 
-    ADD CONSTRAINT DETALLE_CARRITO_CARRITO_FK FOREIGN KEY 
-    ( 
-     CARRITO_id_carrito
-    ) 
-    REFERENCES CARRITO 
-    ( 
-     id_carrito
-    ) 
-;
-
-ALTER TABLE DETALLE_CARRITO 
-    ADD CONSTRAINT DETALLE_CARRITO_PRODUCTO_FK FOREIGN KEY 
-    ( 
-     PRODUCTO_id_producto
-    ) 
-    REFERENCES PRODUCTO 
-    ( 
-     id_producto
-    ) 
-;
-
-ALTER TABLE DETALLE_PEDIDO 
-    ADD CONSTRAINT DETALLE_PEDIDO_PEDIDO_FK FOREIGN KEY 
-    ( 
-     PEDIDO_id_pedido
-    ) 
-    REFERENCES PEDIDO 
-    ( 
-     id_pedido
-    ) 
-;
-
-ALTER TABLE DETALLE_PEDIDO 
-    ADD CONSTRAINT DETALLE_PEDIDO_PRODUCTO_FK FOREIGN KEY 
-    ( 
-     PRODUCTO_id_producto
-    ) 
-    REFERENCES PRODUCTO 
-    ( 
-     id_producto
-    ) 
-;
-
-ALTER TABLE ENTREGA 
-    ADD CONSTRAINT ENTREGA_BODEGUERO_FK FOREIGN KEY 
-    ( 
-     BODEGUERO_id_bodeguero
-    ) 
-    REFERENCES BODEGUERO 
-    ( 
-     id_bodeguero
-    ) 
-;
-
-ALTER TABLE ENTREGA 
-    ADD CONSTRAINT ENTREGA_CONTADOR_FK FOREIGN KEY 
-    ( 
-     CONTADOR_id_contador
-    ) 
-    REFERENCES CONTADOR 
-    ( 
-     id_contador
-    ) 
-;
-
-ALTER TABLE ENTREGA 
-    ADD CONSTRAINT ENTREGA_PEDIDO_FK FOREIGN KEY 
-    ( 
-     PEDIDO_id_pedido
-    ) 
-    REFERENCES PEDIDO 
-    ( 
-     id_pedido
-    ) 
-;
-
-ALTER TABLE PAGO 
-    ADD CONSTRAINT PAGO_CONTADOR_FK FOREIGN KEY 
-    ( 
-     CONTADOR_id_contador
-    ) 
-    REFERENCES CONTADOR 
-    ( 
-     id_contador
-    ) 
-;
-
-ALTER TABLE PAGO 
-    ADD CONSTRAINT PAGO_PEDIDO_FK FOREIGN KEY 
-    ( 
-     PEDIDO_id_pedido
-    ) 
-    REFERENCES PEDIDO 
-    ( 
-     id_pedido
-    ) 
-;
-
-ALTER TABLE PEDIDO 
-    ADD CONSTRAINT PEDIDO_CLIENTE_FK FOREIGN KEY 
-    ( 
-     CLIENTE_id_cliente
-    ) 
-    REFERENCES CLIENTE 
-    ( 
-     id_cliente
-    ) 
-;
-
-ALTER TABLE PEDIDO 
-    ADD CONSTRAINT PEDIDO_VENDEDOR_FK FOREIGN KEY 
-    ( 
-     VENDEDOR_id_vendedor
-    ) 
-    REFERENCES VENDEDOR 
-    ( 
-     id_vendedor
-    ) 
-;
-
-ALTER TABLE REPORTE_VENTAS 
-    ADD CONSTRAINT REPO_VENTAS_ADMIN_FK FOREIGN KEY 
-    ( 
-     ADMINISTRADOR_id_admin
-    ) 
-    REFERENCES ADMINISTRADOR 
-    ( 
-     id_admin
-    ) 
-;
-
-INSERT INTO CLIENTE VALUES ( '1', 'Daniel', 'Ivan', 'Parada','Badilla','example@gmail.com',912345678,'contrasena123.'  );
-
-INSERT INTO ADMINISTRADOR (id_admin, nombre_usuario, contrasena)
-VALUES (1, 'LuisValdivia', '12345678-9');
- 
 COMMIT;
+
+-- Insertar datos en la tabla ROL
+INSERT INTO ROL (rol_id, nombre)
+VALUES (1, 'Cliente');
+
+INSERT INTO ROL (rol_id, nombre)
+VALUES (2, 'Vendedor');
+
+INSERT INTO ROL (rol_id, nombre)
+VALUES (3, 'Contador');
+
+INSERT INTO ROL (rol_id, nombre)
+VALUES (4, 'Bodeguero');
+
+INSERT INTO ROL (rol_id, nombre)
+VALUES (5, 'Administrador');
+
+
+-- Insertar usuarios con rol Cliente
+INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id)
+VALUES (1, '12345678-9', 'Juan', 'Pérez', 'Gómez', 'Carlos', 'example@gmail.com', '987654321', 'Avenida Siempreviva 742, Santiago, Chile', '$2b$12$qs9On1lDme1MzJeDvSH9a.O0IEdCRnH1oF/t.bJBolSsahftd9MDW', 1);
+
+-- Insertar usuarios con rol Vendedor
+INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id)
+VALUES (2, '34567890-1', 'Carlos', 'Gómez', 'Vega', 'Javier', 'test@hotmail.com', '923456789', 'Calle Gabriela 631, Santiago, Chile', '$2b$12$TftEZHYJxij.6oL.udQh/O42a7PJy0WObtR1cA04EMcQtQwzKaVRu', 2);
+
+-- Insertar usuarios con rol Contador
+INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id)
+VALUES (3, '21727510-5', 'Pedro', 'Sánchez', 'Bravo', 'Roberto', 'ejemplo@gmail.com', '945678901', 'Los Monjes 3209, Santiago, Chile', '$2b$12$R8tr1youyhtOBRToHUp.gukks.NBj5mM0MKOx8e8U3.wcQgULlGbG', 3);
+
+-- Insertar usuarios con rol Bodeguero
+INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id)
+VALUES (4, '78901234-5', 'Luis', 'Méndez', 'Ríos', 'Daniel', 'prueba@outlook.com', '967890123', 'El Virrey 1193, Santiago, Chile', '$2b$12$ALW0u60nfHZZULXcC7m4..SVki3EHCYwZ4oVNFAaV8meDhNLNUHiy', 4);
+
+-- Insertar usuarios con rol Administrador
+INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id)
+VALUES (5, '56789012-3', 'Cristobal', 'Ahumada', 'Alonso', 'Vivanco', 'cris.ahumada@gmail.com', '989012345', 'Calle Concha y Toro 5020, La Serena, Chile', '$2b$12$vyMb5la6lOSBB3wOo3mhJOoignhTyqYL81ak6BUMnacw7gIXl.5cG', 5);
+
+-- Insertar datos en la tabla MARCA
+INSERT INTO MARCA (marca_id, nombre) VALUES (101, 'Bosch');
+INSERT INTO MARCA (marca_id, nombre) VALUES (102, 'Stanley');
+INSERT INTO MARCA (marca_id, nombre) VALUES (103, 'DeWalt');
+INSERT INTO MARCA (marca_id, nombre) VALUES (104, 'Makita');
+INSERT INTO MARCA (marca_id, nombre) VALUES (105, 'Truper');
+INSERT INTO MARCA (marca_id, nombre) VALUES (106, 'Black+Decker');
+INSERT INTO MARCA (marca_id, nombre) VALUES (107, 'Bahco');
+INSERT INTO MARCA (marca_id, nombre) VALUES (108, 'Milwaukee');
+INSERT INTO MARCA (marca_id, nombre) VALUES (109, 'Bellota');
+INSERT INTO MARCA (marca_id, nombre) VALUES (110, 'Pretul');
+INSERT INTO MARCA (marca_id, nombre) VALUES (111, 'Ingco');
+INSERT INTO MARCA (marca_id, nombre) VALUES (112, 'Einhell');
+
+-- Insertar datos en la tabla CATEGORIA
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (1, 'Herramientas Manuales');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (2, 'Herramientas Eléctricas');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (3, 'Materiales Básicos');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (4, 'Acabados');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (5, 'Pinturas');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (6, 'Barnices');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (7, 'Cerámicos');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (8, 'Equipos de Seguridad');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (9, 'Tornillos y Anclajes');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (10, 'Fijaciones y Adhesivos');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (11, 'Equipos de Medición');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (12, 'Fontanería');
+INSERT INTO CATEGORIA (categoria_id, nombre) VALUES (13, 'Jardinería');
+
+-- Insertar datos en la tabla PRODUCTO
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (1, 'Martillo de Uña 16oz', 'Martillo forjado en una pieza, mango de goma antivibración. Ideal para carpintería y construcción.', 18000, 1, 102, '/static/img/productos/martillo_stanley.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (2, 'Set de Destornilladores Pro', 'Juego de 8 destornilladores de precisión con puntas imantadas y mangos ergonómicos. Incluye Phillips y Planos.', 25000, 1, 107, '/static/img/productos/destornilladores_bahco.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (3, 'Llave Ajustable Cromada 10"', 'Llave perica de alta resistencia de 10 pulgadas con mandíbula de apertura extra ancha. Acabado cromado.', 15000, 1, 105, '/static/img/productos/llave_ajustable_truper.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (4, 'Taladro Percutor 13mm', 'Potente taladro percutor de 850W, ideal para perforar concreto, metal y madera. Incluye mandril de 13mm.', 45000, 2, 101, '/static/img/productos/taladro_bosch.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (5, 'Sierra Circular 7-1/4"', 'Sierra circular de 1400W para cortes precisos en madera. Incluye hoja de carburo. Empuñadura suave.', 89000, 2, 104, '/static/img/productos/sierra_makita.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (6, 'Lijadora Orbital 1/4 Hoja', 'Lijadora de 200W para acabados finos en madera y superficies. Recolector de polvo integrado.', 32000, 2, 106, '/static/img/productos/lijadora_blackdecker.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (7, 'Cinta Adhesiva para Ductos', 'Cinta de alta resistencia para sellado de ductos y reparaciones generales. 50 metros de largo.', 5000, 10, 110, '/static/img/productos/cinta_ducto_pretul.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (8, 'Cemento Portland 25kg', 'Saco de cemento de alta calidad para obras de construcción general y albañilería.', 8000, 3, 105, '/static/img/productos/cemento_truper.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (9, 'Guantes de Seguridad Anticorte', 'Guantes de protección de nivel 5, ideales para trabajos con herramientas y materiales punzantes.', 9500, 8, 109, '/static/img/productos/guantes_bellota.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (10, 'Casco de Seguridad Industrial', 'Casco de protección rígido con ajuste de barbilla, cumple normativa ANSI Z89.1.', 22000, 8, 103, '/static/img/productos/casco_dewalt.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (11, 'Lentes de Seguridad Antiempañantes', 'Gafas de protección con tratamiento antiempañante y antirayaduras. Protección UV.', 7000, 8, 102, '/static/img/productos/lentes_stanley.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (12, 'Tornillos Madera Cabeza Plana (100u)', 'Caja de 100 tornillos para madera de 1" x 8, cabeza plana y rosca gruesa. Acabado zincado.', 4500, 9, 110, '/static/img/productos/tornillos_pretul.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (13, 'Silicona Acética Transparente', 'Sellador de silicona multiuso para baños y cocinas. Resistente al moho y la humedad. Cartucho de 300ml.', 6000, 10, 105, '/static/img/productos/silicona_truper.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (14, 'Cinta Métrica 5m Magnética', 'Cinta métrica de 5 metros con carcasa resistente y gancho magnético. Bloqueo automático.', 7000, 11, 102, '/static/img/productos/cinta_metrica_stanley.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (15, 'Nivel Láser Cruzado Auto-Nivelante', 'Nivel láser con líneas horizontales y verticales. Rango de 20 metros. Ideal para instalaciones.', 75000, 11, 101, '/static/img/productos/nivel_laser_bosch.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (16, 'Llave de Tubo Stilson 14"', 'Llave de grifa de 14 pulgadas para fontanería. Mordazas de acero de alta resistencia.', 22000, 12, 107, '/static/img/productos/llave_stilson_bahco.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (17, 'Aspersor de Riego Oscilante', 'Aspersor oscilante para riego de jardines medianos a grandes. Cobertura ajustable.', 14000, 13, 109, '/static/img/productos/aspersor_bellota.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (18, 'Pintura Blanca Lavable 1 Galón', 'Pintura látex acrílica de interior, acabado mate. Fácil de limpiar y alta cobertura.', 15000, 5, 106, '/static/img/productos/pintura_blanca_blackdecker.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (19, 'Barniz Marino Brillante 1 Litro', 'Barniz protector para madera expuesta al exterior. Resistencia a la intemperie y rayos UV.', 12000, 6, 110, '/static/img/productos/barniz_pretul.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (20, 'Cerámica de Piso 30x30cm (m2)', 'Caja de baldosas cerámicas para piso, acabado mate, resistente al desgaste. Precio por metro cuadrado.', 8000, 7, 105, '/static/img/productos/ceramica_truper.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (21, 'Ladrillo Fiscal (unidad)', 'Ladrillo de arcilla cocida, ideal para muros y construcciones tradicionales. Precio por unidad.', 300, 3, 105, '/static/img/productos/ladrillo_fiscal.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (22, 'Espátula para Masilla 4"', 'Espátula de acero inoxidable con mango de goma. Ideal para aplicar y alisar masilla y yeso.', 4000, 4, 102, '/static/img/productos/espatula_stanley.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (23, 'Rotomartillo SDS Plus', 'Rotomartillo de 900W para perforaciones de alta potencia en concreto y mampostería. 3 modos de operación.', 120000, 2, 108, '/static/img/productos/rotomartillo_milwaukee.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (24, 'Motosierra a Gasolina 50cc', 'Potente motosierra de 50cc con barra de 20 pulgadas. Ideal para cortar árboles y leña.', 200000, 2, 104, '/static/img/productos/motosierra_makita_grande.jpg');
+INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
+VALUES (25, 'Juego de Brocas para Concreto', 'Set de 5 brocas SDS Plus para concreto y ladrillo. Medidas de 6mm a 12mm.', 20000, 2, 101, '/static/img/productos/brocas_concreto_bosch.jpg');
+COMMIT;
+

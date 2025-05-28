@@ -1,14 +1,17 @@
 package com.ferremas.API2.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal; // Importa BigDecimal para precios
+
 
 @Entity
 @Table(name = "PRODUCTO")
 public class Producto {
-    
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_PRODUCTO")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "producto_seq_gen")
+    @SequenceGenerator(name = "producto_seq_gen", sequenceName = "PRODUCTO_SEQ", allocationSize = 1)
+    @Column(name = "PRODUCTO_ID")
     private Long id;
 
     @Column(name = "NOMBRE")
@@ -18,12 +21,37 @@ public class Producto {
     private String descripcion;
 
     @Column(name = "PRECIO")
-    private Double precio;
+    private BigDecimal precio; 
 
-    @Column(name = "STOCK") 
-    private Integer stock;
+    @Column(name = "CATEGORIA_ID")
+    private Long categoriaId;
 
-    // GETTERS AND SETTERS
+    @Column(name = "MARCA_ID")
+    private Long marcaId;
+
+    @Column(name = "IMAGEN") 
+    private String imagenUrl;
+
+
+
+    // Constructor vacío (necesario para JPA)
+    public Producto() {
+    }
+
+    
+    public Producto(Long id, String nombre, String descripcion, BigDecimal precio, Long categoriaId, Long marcaId, String imagenUrl) {
+        this.id = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.categoriaId = categoriaId;
+        this.marcaId = marcaId;
+        this.imagenUrl = imagenUrl;
+    }
+
+
+    // --- GETTERS AND SETTERS ---
+
     public Long getId() {
         return id;
     }
@@ -43,16 +71,45 @@ public class Producto {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-    public Double getPrecio() {
+
+    public BigDecimal getPrecio() {
         return precio;
     }
-    public void setPrecio(Double precio) {
+    public void setPrecio(BigDecimal precio) {
         this.precio = precio;
     }
-    public Integer getStock() {
-        return stock;
+
+    public Long getCategoriaId() {
+        return categoriaId;
     }
-    public void setStock(Integer stock) {
-        this.stock = stock;
+    public void setCategoriaId(Long categoriaId) {
+        this.categoriaId = categoriaId;
+    }
+
+    public Long getMarcaId() {
+        return marcaId;
+    }
+    public void setMarcaId(Long marcaId) {
+        this.marcaId = marcaId;
+    }
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
+    }
+
+    @Override
+    public String toString() {
+        return "Producto{" +
+               "id=" + id +
+               ", nombre='" + nombre + '\'' +
+               ", descripcion='" + descripcion + '\'' +
+               ", precio=" + precio +
+               ", categoriaId=" + categoriaId +
+               ", marcaId=" + marcaId +
+               ", imagenUrl='" + imagenUrl + '\'' +
+               '}';
     }
 }
