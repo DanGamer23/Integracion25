@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static com.ferremas.API2.repository.ProductoSpecification.withFilters;
 
+@CrossOrigin(origins = "http://localhost:8001")
 @RestController
 @RequestMapping("/productos")
 public class ProductoController {

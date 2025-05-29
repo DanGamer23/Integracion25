@@ -273,8 +273,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function buildApiUrl() {
         const params = new URLSearchParams();
         if (currentFilters.search) params.append('search', currentFilters.search);
-        if (currentFilters.categoryName) params.append('categoryName', currentFilters.categoryName);
-        if (currentFilters.brandName) params.append('brandName', currentFilters.brandName);
+        if (currentFilters.categoryName) params.append('categoriaNombre', currentFilters.categoryName);
+        if (currentFilters.brandName) params.append('marcaNombre', currentFilters.brandName);
         params.append('minPrecio', currentFilters.minPrecio);
         params.append('maxPrecio', currentFilters.maxPrecio);
         if (currentFilters.sortBy) params.append('sortBy', currentFilters.sortBy);
@@ -394,75 +394,93 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // Listeners para los filtros y paginación (Solo para la página de tienda)
-    function addCategoryFilterListeners() {
-        if (categoryFilterList) {
-            categoryFilterList.querySelectorAll('li').forEach(item => {
-                item.addEventListener('click', function() {
-                    categoryFilterList.querySelectorAll('li').forEach(li => li.classList.remove('active-filter'));
-                    this.classList.add('active-filter');
-                    currentFilters.categoryName = this.dataset.categoryName;
-                    currentFilters.page = 0;
-                    fetchShopProducts();
-                });
-            });
-        }
-    }
+function addCategoryFilterListeners() {
+    document.querySelectorAll('.category-filter-item').forEach(item => {
+        item.addEventListener('click', function(event) {
+            event.preventDefault();
+            document.querySelectorAll('.category-filter-item').forEach(el => el.classList.remove('active-filter'));
+            this.classList.add('active-filter');
 
-    function addBrandFilterListeners() {
-        if (brandFilterList) {
-            brandFilterList.querySelectorAll('li').forEach(item => {
-                item.addEventListener('click', function() {
-                    brandFilterList.querySelectorAll('li').forEach(li => li.classList.remove('active-filter'));
-                    this.classList.add('active-filter');
-                    currentFilters.brandName = this.dataset.brandName;
-                    currentFilters.page = 0;
-                    fetchShopProducts();
-                });
-            });
-        }
-    }
+            currentFilters.categoryName = this.dataset.categoryName || '';
+            currentFilters.page = 0;
+            fetchShopProducts();
+        });
+    });
+}
 
-    function loadCategories() {
-        if (!categoryFilterList) return;
-        fetch(`${apiBaseUrl}/categorias`)
-            .then(response => response.json())
-            .then(categories => {
-                categoryFilterList.innerHTML = '<li data-category-name="" class="list-group-item active-filter">Todas las Categorías</li>';
-                categories.forEach(cat => {
-                    const li = document.createElement('li');
-                    li.className = 'list-group-item';
-                    li.dataset.categoryName = cat.nombre;
-                    li.textContent = cat.nombre;
-                    categoryFilterList.appendChild(li);
-                });
-                addCategoryFilterListeners();
-            })
-            .catch(error => {
-                console.error('Error al cargar categorías:', error);
-                showToast('Error al cargar categorías.', 'danger');
-            });
-    }
+function addBrandFilterListeners() {
+    document.querySelectorAll('.brand-filter-item').forEach(item => {
+        item.addEventListener('click', function(event) {
+            event.preventDefault();
+            document.querySelectorAll('.brand-filter-item').forEach(el => el.classList.remove('active-filter'));
+            this.classList.add('active-filter');
 
-    function loadBrands() {
-        if (!brandFilterList) return;
-        fetch(`${apiBaseUrl}/marcas`)
-            .then(response => response.json())
-            .then(brands => {
-                brandFilterList.innerHTML = '<li data-brand-name="" class="list-group-item active-filter">Todas las Marcas</li>';
-                brands.forEach(brand => {
-                    const li = document.createElement('li');
-                    li.className = 'list-group-item';
-                    li.dataset.brandName = brand.nombre;
-                    li.textContent = brand.nombre;
-                    brandFilterList.appendChild(li);
-                });
-                addBrandFilterListeners();
-            })
-            .catch(error => {
-                console.error('Error al cargar marcas:', error);
-                showToast('Error al cargar marcas.', 'danger');
+            currentFilters.brandName = this.dataset.brandName || '';
+            currentFilters.page = 0;
+            fetchShopProducts();
+        });
+    });
+}
+
+function loadCategories() {
+    if (!categoryFilterList) return;
+
+    fetch(`${apiBaseUrl}/categorias`)
+        .then(response => response.json())
+        .then(categories => {
+            categoryFilterList.innerHTML = `
+                <li>
+                    <a href="#" class="category-filter-item active-filter" data-category-name="">
+                        <i class="fas fa-arrow-alt-circle-right me-2"></i>Todas las categorías
+                    </a>
+                </li>`;
+
+            categories.forEach(cat => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <a href="#" class="category-filter-item" data-category-name="${cat.nombre}">
+                        <i class="fas fa-arrow-alt-circle-right me-2"></i>${cat.nombre}
+                    </a>`;
+                categoryFilterList.appendChild(li);
             });
-    }
+
+            addCategoryFilterListeners();
+        })
+        .catch(error => {
+            console.error('Error al cargar categorías:', error);
+            showToast('Error al cargar categorías.', 'danger');
+        });
+}
+
+function loadBrands() {
+    if (!brandFilterList) return;
+
+    fetch(`${apiBaseUrl}/marcas`)
+        .then(response => response.json())
+        .then(brands => {
+            brandFilterList.innerHTML = `
+                <li>
+                    <a href="#" class="brand-filter-item active-filter" data-brand-name="">
+                        <i class="fas fa-arrow-alt-circle-right me-2"></i>Todas las marcas
+                    </a>
+                </li>`;
+
+            brands.forEach(brand => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <a href="#" class="brand-filter-item" data-brand-name="${brand.nombre}">
+                        <i class="fas fa-arrow-alt-circle-right me-2"></i>${brand.nombre}
+                    </a>`;
+                brandFilterList.appendChild(li);
+            });
+
+            addBrandFilterListeners();
+        })
+        .catch(error => {
+            console.error('Error al cargar marcas:', error);
+            showToast('Error al cargar marcas.', 'danger');
+        });
+}
 
     function renderPagination(totalPages) {
         if (!paginationControls) return;
