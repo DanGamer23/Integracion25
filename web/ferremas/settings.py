@@ -22,6 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-=(^&(86#%qv_7v@=k+vuqtbc)uii+-nh1m7%aw^_v+w4sw!kpd'
+MERCADO_PAGO_ACCESS_TOKEN = 'TEST-5617655088540230-052819-612891b2f1f2214e891d7de69be89097-2215485252'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

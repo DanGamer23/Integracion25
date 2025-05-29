@@ -57,13 +57,24 @@ public class ProductoSpecification {
         };
     }
 
+    // Método para excluir id especifico
+    public static Specification<Producto> excludeProductId(Long productId) {
+        return (root, query, criteriaBuilder) -> {
+            if (productId == null) {
+                return criteriaBuilder.conjunction(); // Si no se proporciona un ID, no se excluye nada
+            }
+            return criteriaBuilder.notEqual(root.get("id"), productId);
+        };
+    }
+    
     // Método combinado para aplicar múltiples filtros
     public static Specification<Producto> withFilters(
             String keyword,
             Long categoriaId,
             Long marcaId,
             Double minPrecio,
-            Double maxPrecio) {
+            Double maxPrecio,
+            Long excludeId) {
 
         Specification<Producto> spec = Specification.where(null); // Inicia con una especificación que siempre es verdadera
 
@@ -72,7 +83,9 @@ public class ProductoSpecification {
         spec = spec.and(byCategoriaId(categoriaId));
         spec = spec.and(byMarcaId(marcaId));
         spec = spec.and(byPriceRange(minPrecio, maxPrecio));
+        spec = spec.and(excludeProductId(excludeId));
 
         return spec;
     }
+
 }

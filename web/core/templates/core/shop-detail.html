@@ -72,10 +72,10 @@
                         </div>
                         <div class="d-flex m-3 me-0">
                             <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="fas fa-search text-primary"></i></button>
-                            <a href="{% url 'cart' %}" class="position-relative me-4 my-auto"> 
-                                <i class="fa fa-shopping-bag fa-2x"></i>
-                                <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1" style="top: -5px; left: 15px; height: 20px; min-width: 20px;">3</span>
-                            </a>
+                                <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary ms-3" data-bs-toggle="modal" data-bs-target="#shoppingCartModal">
+                                    <i class="fa fa-shopping-bag me-2 text-primary"></i>Carrito
+                                    <span class="badge bg-danger rounded-circle ms-1" id="cart-counter">0</span>
+                                </a>
                             <a href="#" class="my-auto"> 
                                 <i class="fas fa-user fa-2x"></i>
                             </a>
@@ -114,100 +114,88 @@
         <!-- Single Page Header End -->
 
 
-            <div class="container-fluid py-5 mt-5">
-                <div class="container py-5">
-                    {# Comprobamos si la vista nos pasó un producto válido #}
-                    {% if product %}
-                    <div class="row g-4 mb-5">
-                        <div class="col-lg-8 col-xl-9"> {# Ajusté col-lg-8 col-xl-9 para que el contenido principal sea más ancho #}
-                            <div class="row g-4">
-                                <div class="col-lg-6">
-                                    <div class="border rounded">
-                                        <a href="#"> {# Puedes hacer que esta imagen sea un enlace a la misma página o a una galería #}
-                                            {# La URL de la imagen viene de la API. Asumimos que ya incluye /static/ #}
-                                            <img src="{{ product.imagenUrl }}" class="img-fluid rounded" alt="Imagen de {{ product.nombre }}">
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <h4 class="fw-bold mb-3">{{ product.nombre }}</h4> {# Nombre del producto #}
-                                    
-                                        
-                                        <p class="mb-3">Marca: <span class="text-secondary">{{ product.marcaNombre }}</span></p>
+                    <div class="container-fluid py-5 mt-5">
+                        <div class="container py-5">
+                            {% if product %}
+                            <div class="row g-4 mb-5">
+                                <div class="col-lg-8 col-xl-9">
+                                    <div class="row g-4">
+                                        <div class="col-lg-6">
+                                            <div class="border rounded">
+                                                <a href="#">
+                                                    <img src="{{ product.imagenUrl }}" class="img-fluid rounded" alt="Imagen de {{ product.nombre }}">
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <h4 class="fw-bold mb-3">{{ product.nombre }}</h4>
 
-                                    
-                                        <p class="mb-3">Categoría: <span class="text-primary">{{ product.categoriaNombre }}</span></p> 
-                        
-                                    
-                                    {# Precio del producto: Formateado sin decimales y con separadores de miles #}
-                                    <h5 class="fw-bold mb-3">{{ product.precio|floatformat:"0"|intcomma }} CLP</h5>
-                                    
-                                    <div class="d-flex mb-4">
-                                        {# Estrellas de calificación (estas son estáticas, para ejemplo) #}
-                                        <i class="fa fa-star text-primary"></i>
-                                        <i class="fa fa-star text-primary"></i>
-                                        <i class="fa fa-star text-primary"></i>
-                                        <i class="fa fa-star text-primary"></i>
-                                        <i class="fa fa-star"></i>
-                                    </div>
-                                    
-                                    
-                                    {# Controles de cantidad #}
-                                    <div class="input-group quantity mb-3" style="width: 100px;">
-                                        <div class="input-group-btn">
-                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border">
-                                                <i class="fa fa-minus"></i>
+                                            <p class="mb-3">Marca: <span class="text-secondary">{{ product.marcaNombre }}</span></p>
+                                            <p class="mb-3">Categoría: <span class="text-primary">{{ product.categoriaNombre }}</span></p>
+
+                                            <h5 class="fw-bold mb-3" id="product-detail-price">{{ product.precio|floatformat:"0"|intcomma }} CLP</h5> {# Agregamos un ID al precio para posible uso futuro, aunque no estrictamente necesario para este cambio #}
+
+                                            <div class="d-flex mb-4">
+                                                {# Estrellas de calificación (estas son estáticas, para ejemplo) #}
+                                                <i class="fa fa-star text-primary"></i>
+                                                <i class="fa fa-star text-primary"></i>
+                                                <i class="fa fa-star text-primary"></i>
+                                                <i class="fa fa-star text-primary"></i>
+                                                <i class="fa fa-star"></i>
+                                            </div>
+
+                                            {# Controles de cantidad - AGREGAR IDs y data-product-id #}
+                                                <div class="input-group quantity mb-3" style="width: 130px;">
+                                                    <button class="btn btn-sm btn-outline-secondary" data-action="minus">
+                                                        <i class="fa fa-minus"></i>
+                                                    </button>
+                                                    <input type="number" id="product-qty-input" class="form-control text-center" value="1" min="1" style="flex-grow: 1;">
+                                                    <button class="btn btn-sm btn-outline-secondary" data-action="plus">
+                                                        <i class="fa fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            {# Botón "Agregar al carrito" - MODIFICAR para usar la clase add-to-cart-btn y data-product-id #}
+                                            <button class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary add-to-cart-btn" id="add-to-cart-detail-btn" data-product-id="{{ product.id }}" type="button">
+                                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Agregar al carrito
                                             </button>
                                         </div>
-                                        <input type="text" class="form-control form-control-sm text-center border-0" value="1">
-                                        <div class="input-group-btn">
-                                            <button class="btn btn-sm btn-plus rounded-circle bg-light border">
-                                                <i class="fa fa-plus"></i>
-                                            </button>
+                                        <div class="col-lg-12">
+                                            <nav>
+                                                <div class="nav nav-tabs mb-3">
+                                                    <button class="nav-link active border-white border-bottom-0" type="button" role="tab"
+                                                        id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about"
+                                                        aria-controls="nav-about" aria-selected="true">Descripción</button>
+                                                </div>
+                                            </nav>
+                                            <div class="tab-content mb-5">
+                                                <div class="tab-pane active" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab">
+                                                    <p>{{ product.descripcion }}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Agregar al carrito</a>
                                 </div>
-                                <div class="col-lg-12">
-                                    <nav>
-                                        <div class="nav nav-tabs mb-3">
-                                            <button class="nav-link active border-white border-bottom-0" type="button" role="tab"
-                                                id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about"
-                                                aria-controls="nav-about" aria-selected="true">Descripción</button>
+                                {# Sección de Productos relacionados #}
+                                <div class="col-lg-4 col-xl-3">
+                                    <div class="bg-light p-4 rounded">
+                                        <h4 class="mb-4">Productos relacionados</h4>
+                                        <div id="related-products-container">
+                                            <p>Esta sección puede mostrar productos similares.</p>
+                                            {# Los productos relacionados se cargarán aquí si decidimos implementarlos con JS #}
                                         </div>
-                                    </nav>
-                                    <div class="tab-content mb-5">
-                                        <div class="tab-pane active" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab">
-                                            {# La descripción completa del producto en la pestaña #}
-                                            <p>{{ product.descripcion }}</p>
-                                        </div>
-                                        {# Otros tab-pane si tuvieras más pestañas #}
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        {# Aquí puedes añadir una columna lateral para "productos relacionados" o "categorías" si la plantilla original la tenía #}
-                        <div class="col-lg-4 col-xl-3">
-                            {# Aquí iría el contenido de la barra lateral si la plantilla la contemplaba #}
-                            {# Por ejemplo, una lista de productos relacionados, filtros, etc. #}
-                            <div class="bg-light p-4 rounded">
-                                <h4 class="mb-4">Productos relacionados</h4>
-                                <p>Esta sección puede mostrar productos similares.</p>
-                                {# Aquí podrías cargar productos relacionados, quizás con otro script JS o desde la vista #}
+                            {% else %}
+                            <div class="text-center p-5">
+                                <h2 class="text-danger">Oops!</h2>
+                                <p>{{ error_message }}</p>
+                                <p>El producto que buscas no pudo ser cargado o no existe.</p>
+                                <a href="{% url 'shop' %}" class="btn border border-primary rounded-pill px-3 py-2 text-primary">Volver a la tienda</a>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
-                    {% else %}
-                    {# Bloque para cuando no se encuentra el producto o hay un error #}
-                    <div class="text-center p-5">
-                        <h2 class="text-danger">Oops!</h2>
-                        <p>{{ error_message }}</p> {# Muestra el mensaje de error de la vista #}
-                        <p>El producto que buscas no pudo ser cargado o no existe.</p>
-                        <a href="{% url 'shop' %}" class="btn border border-primary rounded-pill px-3 py-2 text-primary">Volver a la tienda</a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
             
 
 
@@ -291,8 +279,36 @@
     <script src="{% static 'lib/lightbox/js/lightbox.min.js' %}"></script>
     <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
 
+    <div class="modal fade" id="shoppingCartModal" tabindex="-1" aria-labelledby="shoppingCartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shoppingCartModalLabel">Tu Carrito de Compras</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="cart-items-container" class="list-group mb-3">
+                        <p class="text-center text-muted" id="cart-empty-message">Tu carrito está vacío.</p>
+                    </div>
+                </div>
+                <div class="modal-footer d-block">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Total: <span id="cart-total">$0</span></h4>
+                        <button type="button" class="btn btn-success btn-lg w-100" id="checkout-button">
+                            <i class="fa fa-credit-card me-2"></i> Proceder al Pago
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">Seguir Comprando</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/shop_products.js' %}"></script>
     </body>
 
 </html>

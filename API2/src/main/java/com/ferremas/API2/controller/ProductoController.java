@@ -56,13 +56,14 @@ public class ProductoController {
     }
 
     // GET: Buscar productos con filtros avanzados
-        @GetMapping("/filter")
+    @GetMapping("/filter")
     public ResponseEntity<Page<ProductoDTO>> obtenerProductosFiltrados(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String categoriaNombre,
             @RequestParam(required = false) String marcaNombre,
             @RequestParam(required = false) Double minPrecio,
             @RequestParam(required = false) Double maxPrecio,
+            @RequestParam(required = false) Long excludeId,
             Pageable pageable) {
 
         Long categoriaId = null;
@@ -85,7 +86,7 @@ public class ProductoController {
             }
         }
 
-        Specification<Producto> finalSpec = withFilters(search, categoriaId, marcaId, minPrecio, maxPrecio);
+        Specification<Producto> finalSpec = withFilters(search, categoriaId, marcaId, minPrecio, maxPrecio, excludeId);
 
         Page<Producto> productoPage = productoRepository.findAll(finalSpec, pageable);
 

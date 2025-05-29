@@ -9,4 +9,8 @@ urlpatterns = [
     path('checkout/', views.checkout_view, name='checkout'), # Tu nueva página de checkout
     path('contact/', views.contact_view, name='contact'),
     path('testimonial/', views.testimonial_view, name='testimonial'),
+    path('iniciar-pago/', views.iniciar_pago, name='iniciar_pago'),
+    path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'), 
+    path('pago-fallido/', views.pago_fallido, name='pago_fallido'), 
+    path('pago-pendiente/', views.pago_pendiente, name='pago_pendiente'),
 ]
