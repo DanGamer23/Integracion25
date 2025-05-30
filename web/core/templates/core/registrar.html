@@ -1,0 +1,36 @@
+{% extends 'base_logins.html' %}
+{% block content %}
+<h3 class="text-center text-primary mb-4">Crear Cuenta</h3>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3"><input type="text" name="rut" class="form-control" placeholder="RUT (ej: 12345678-9)" required></div>
+    <div class="mb-3"><input type="text" name="nombre" class="form-control" placeholder="Primer nombre" required></div>
+    <div class="mb-3"><input type="text" name="snombre" class="form-control" placeholder="Segundo nombre"></div>
+    <div class="mb-3"><input type="text" name="apellido_p" class="form-control" placeholder="Apellido paterno" required></div>
+    <div class="mb-3"><input type="text" name="apellido_m" class="form-control" placeholder="Apellido materno"></div>
+    <div class="mb-3">
+        <input type="email" name="email" id="email" class="form-control" placeholder="Correo electrónico" required>
+        <div id="email-feedback" class="form-text text-danger d-none"></div>
+    </div>
+    <div class="mb-3"><input type="text" name="fono" class="form-control" placeholder="Teléfono"></div>
+    <div class="mb-3"><input type="text" name="direccion" class="form-control" placeholder="Dirección" required></div>
+
+    <div class="mb-3 position-relative">
+        <input type="password" name="password" id="password" class="form-control" placeholder="Contraseña" required>
+        <span class="position-absolute end-0 top-50 translate-middle-y me-3 toggle-password"
+              data-target="password" role="button" style="z-index: 10;">
+            <i class="fas fa-eye text-secondary"></i>
+        </span>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">Registrar</button>
+
+    {% if error %}
+        <div class="alert alert-danger mt-3 text-center">{{ error }}</div>
+    {% endif %}
+</form>
+
+<div class="text-center mt-3">
+    <a href="{% url 'login' %}">¿Ya tienes cuenta? Inicia sesión</a>
+</div>
+{% endblock %}

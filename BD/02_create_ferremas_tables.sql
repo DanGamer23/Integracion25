@@ -58,15 +58,6 @@ CREATE TABLE METODO_PAGO (
     nombre VARCHAR2(100) NOT NULL
 );
 
--- Tabla CARRITO
-CREATE TABLE CARRITO (
-    carrito_id NUMBER(10) PRIMARY KEY,
-    usuario_id NUMBER(10) NOT NULL,
-    fecha DATE DEFAULT SYSDATE NOT NULL,
-    total NUMBER(10) DEFAULT 0 NOT NULL,
-    CONSTRAINT CARRITO_USUARIO_FK FOREIGN KEY (usuario_id) 
-        REFERENCES USUARIO(id_usuario) ON DELETE CASCADE
-);
 
 -- Tabla USUARIO
 CREATE TABLE USUARIO (
@@ -81,6 +72,7 @@ CREATE TABLE USUARIO (
     direccion VARCHAR2(200),
     password VARCHAR2(200) NOT NULL,
     rol_id number(1) NOT NULL,
+    requiere_cambio_password NUMBER(1) DEFAULT 0 NOT NULL,
     CONSTRAINT USUARIO_ROL_FK FOREIGN KEY (rol_id)
 	REFERENCES ROL(rol_id) ON DELETE CASCADE
 );
@@ -158,6 +150,8 @@ CREATE TABLE PAGO (
         REFERENCES USUARIO(id_usuario) ON DELETE SET NULL
 );
 
+ALTER TABLE USUARIO ADD codigo_reset VARCHAR2(10);
+ALTER TABLE USUARIO ADD fecha_reset TIMESTAMP;
 COMMIT;
 
 -- Insertar datos en la tabla ROL
@@ -194,8 +188,8 @@ INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, e
 VALUES (4, '78901234-5', 'Luis', 'Méndez', 'Ríos', 'Daniel', 'prueba@outlook.com', '967890123', 'El Virrey 1193, Santiago, Chile', '$2b$12$ALW0u60nfHZZULXcC7m4..SVki3EHCYwZ4oVNFAaV8meDhNLNUHiy', 4);
 
 -- Insertar usuarios con rol Administrador
-INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id)
-VALUES (5, '56789012-3', 'Cristobal', 'Ahumada', 'Alonso', 'Vivanco', 'cris.ahumada@gmail.com', '989012345', 'Calle Concha y Toro 5020, La Serena, Chile', '$2b$12$vyMb5la6lOSBB3wOo3mhJOoignhTyqYL81ak6BUMnacw7gIXl.5cG', 5);
+INSERT INTO USUARIO (id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id, requiere_cambio_password)
+VALUES (5, '56789012-3', 'Cristobal', 'Ahumada', 'Alonso', 'Vivanco', 'cris.ahumada@gmail.com', '989012345', 'Calle Concha y Toro 5020, La Serena, Chile', '$2b$12$vyMb5la6lOSBB3wOo3mhJOoignhTyqYL81ak6BUMnacw7gIXl.5cG', 5, 1);
 
 -- Insertar datos en la tabla MARCA
 INSERT INTO MARCA (marca_id, nombre) VALUES (101, 'Bosch');

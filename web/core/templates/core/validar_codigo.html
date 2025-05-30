@@ -1,0 +1,38 @@
+{% extends 'base_logins.html' %}
+{% block content %}
+<h3 class="text-center text-primary mb-4">Cambiar Contraseña</h3>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="codigo" class="form-label">Código recibido</label>
+        <input type="text" name="codigo" id="codigo" class="form-control" required>
+    </div>
+    <div class="mb-3 position-relative">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-group">
+            <input type="password" name="password" id="password" class="form-control" required>
+            <span class="input-group-text bg-white border-start-0 toggle-password"
+                  data-target="password" role="button" style="cursor: pointer;">
+                <i class="fas fa-eye text-secondary"></i>
+            </span>
+        </div>
+    </div>
+
+    <div class="mb-3 position-relative">
+        <label for="confirmar" class="form-label">Confirmar contraseña</label>
+        <div class="input-group">
+            <input type="password" name="confirmar" id="confirmar" class="form-control" required>
+            <span class="input-group-text bg-white border-start-0 toggle-password"
+                  data-target="confirmar" role="button" style="cursor: pointer;">
+                <i class="fas fa-eye text-secondary"></i>
+            </span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Cambiar contraseña</button>
+</form>
+
+{% if error %}
+<div class="alert alert-danger mt-3">{{ error }}</div>
+{% endif %}
+{% endblock %}

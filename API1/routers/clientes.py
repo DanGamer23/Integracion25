@@ -2,6 +2,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from database import get_conexion
 from passlib.hash import bcrypt
+import random
+from datetime import datetime
+import traceback
 
 router = APIRouter(
     prefix="/clientes",
@@ -87,42 +90,58 @@ def obtener_usuario(id_buscar: int):
         raise HTTPException(status_code=500, detail=str(ex))
 
 @router.post("/")
-def agregar_usuario(rut:str, nombre:str, apellido_p:str, apellido_m:str, snombre:str, email:str, fono:str, direccion:str, password:str,):
+def agregar_usuario(rut: str, nombre: str, apellido_p: str, apellido_m: str, snombre: str,
+                    email: str, fono: str, direccion: str, password: str):
     try:
-        # Hash the password before storing it
+        # Validación: verificar si el correo ya existe
+        con = get_conexion()
+        cursor = con.cursor()
+        cursor.execute("SELECT COUNT(*) FROM USUARIO WHERE LOWER(email) = :email", {"email": email.lower()})
+        count = cursor.fetchone()[0]
+
+        if count > 0:
+            cursor.close()
+            con.close()
+            raise HTTPException(status_code=409, detail="Email ya registrado")  # 409 Conflict
+
+        # Continuar si no está duplicado
         hashed_password = bcrypt.hash(password)
-        rol_id=1
-        cone = get_conexion()
-        cursor = cone.cursor()
-        cursor.execute("""INSERT INTO USUARIO 
-                       VALUES 
-                       (seq_usuario.nextval, 
-                       :rut, 
-                       :nombre, 
-                       :apellido_p, 
-                       :apellido_m, 
-                       :snombre, 
-                       :email, 
-                       :fono, 
-                       :direccion, 
-                       :password, 
-                       :rol_id)""",{
-                           "rut": rut,
-                           "nombre": nombre,
-                           "apellido_p": apellido_p,
-                           "apellido_m": apellido_m,
-                           "snombre": snombre,
-                           "email": email,
-                           "fono": fono,
-                           "direccion": direccion,
-                           "password": hashed_password,
-                           "rol_id": rol_id,
-                       })
-        cone.commit()
+        rol_id = 1
+        requiere_cambio_password = 0
+
+        cursor.execute("""
+            INSERT INTO USUARIO (
+                id_usuario, rut, nombre, apellido_p, apellido_m, snombre,
+                email, fono, direccion, password, rol_id,
+                requiere_cambio_password, codigo_reset, fecha_reset
+            ) VALUES (
+                seq_usuario_id.nextval, :rut, :nombre, :apellido_p, :apellido_m, :snombre,
+                :email, :fono, :direccion, :password, :rol_id,
+                :requiere_cambio_password, NULL, NULL
+            )
+        """, {
+            "rut": rut,
+            "nombre": nombre,
+            "apellido_p": apellido_p,
+            "apellido_m": apellido_m,
+            "snombre": snombre,
+            "email": email,
+            "fono": fono,
+            "direccion": direccion,
+            "password": hashed_password,
+            "rol_id": rol_id,
+            "requiere_cambio_password": requiere_cambio_password
+        })
+
+        con.commit()
         cursor.close()
-        cone.close()
-        return {"mensaje": "Uusuario agregado correctamente"}
+        con.close()
+        return {"mensaje": "Usuario agregado correctamente"}
+    except HTTPException:
+        raise  # Re-lanzar errores intencionales
     except Exception as ex:
+        print("❌ ERROR al crear usuario:", str(ex))
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(ex))
     
 @router.put("/{id_actualizar}")
@@ -243,7 +262,7 @@ def login(email:str, password:str):
 
         cursor.execute("""
             SELECT 
-                id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id
+                id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id, requiere_cambio_password
             FROM USUARIO
             WHERE email = :email
         """, {"email": email,})
@@ -265,7 +284,82 @@ def login(email:str, password:str):
             "email": usuario[6],
             "fono": usuario[7],
             "direccion": usuario[8],
-            "rol_id": usuario[10]
+            "rol_id": usuario[10],
+            "requiere_cambio_password": usuario[11]
         }
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))
+
+@router.post("/cambiar_password")
+def cambiar_password(payload: dict):
+    email = payload.get("email")
+    nueva_password = payload.get("nueva_password")
+
+    if not email or not nueva_password:
+        raise HTTPException(status_code=400, detail="Faltan datos para cambiar la contraseña")
+    
+    hashed = bcrypt.hash(nueva_password)
+    try:
+        cone = get_conexion()
+        cursor = cone.cursor()
+        cursor.execute("""
+            UPDATE USUARIO 
+            SET password = :password, requiere_cambio_password = 0 
+            WHERE email = :email
+        """, {"password": hashed, "email": email})
+        if cursor.rowcount == 0:
+            cone.close()
+            cursor.close()
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        cone.commit()
+        cursor.close()
+        cone.close()
+        return {"mensaje": "Contraseña cambiada correctamente"}
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+    
+@router.post("/solicitar-reset")
+def solicitar_reset(payload: dict):
+    email = payload.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email es requerido para solicitar un reset de contraseña")
+    
+    codigo = str(random.randint(100000, 999999))  # Genera un código de 6 dígitos
+    now = datetime.now()
+    
+    try:
+        cone = get_conexion()
+        cursor = cone.cursor()
+        cursor.execute("""
+            UPDATE USUARIO
+            SET codigo_reset = :codigo, fecha_reset = :fecha
+            WHERE email = :email
+        """, {"codigo": codigo, "fecha": now, "email": email})
+        if cursor.rowcount == 0:
+            cone.close()
+            cursor.close()
+            raise HTTPException(status_code=404, detail="Email no encontrado")
+        cone.commit()
+        cursor.close()
+        cone.close()
+
+        #simulacion de envio de codigo
+        return {"mensaje": "Código de reset enviado correctamente", "codigo": codigo}
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+    
+@router.get("/existe-email")
+def existe_email(email: str):
+    try:
+        cone = get_conexion()
+        cursor = cone.cursor()
+        cursor.execute("SELECT COUNT(*) FROM USUARIO WHERE LOWER(email) = :email", {"email": email.lower()})
+        count = cursor.fetchone()[0]
+        cursor.close()
+        cone.close()
+        return {"existe": count > 0}
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+        

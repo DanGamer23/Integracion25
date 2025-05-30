@@ -1,0 +1,34 @@
+{% extends 'base_logins.html' %}
+{% block content %}
+<h3 class="text-center text-primary mb-4">Iniciar Sesión</h3>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <input type="email" name="email" id="email" class="form-control" required placeholder="tucorreo@example.com">
+    </div>
+    <div class="mb-3 position-relative">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-group">
+            <input type="password" name="password" id="password" class="form-control" required>
+            <span class="input-group-text bg-white border-start-0 toggle-password"
+                data-target="password" role="button" style="cursor: pointer;">
+                <i class="fas fa-eye text-secondary"></i>
+            </span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+</form>
+
+<div class="text-center mt-3">
+    <a href="{% url 'solicitar_reset' %}">¿Olvidaste tu contraseña?</a>
+</div>
+<div class="text-center mt-3">
+    <a href="{% url 'registrar' %}">¿No tienes cuenta? Regístrate</a>
+</div>
+
+{% if error %}
+<div class="alert alert-danger mt-3 text-center">{{ error }}</div>
+{% endif %}
+{% endblock %}

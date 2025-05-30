@@ -5,4 +5,4 @@ passwords:
         "123456",
         "Pikachu23",
         "Chile2015.",
-        "56789012-3"
+ admin:   cris.ahumada@gmail.com    "56789012-3"

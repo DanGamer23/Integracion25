@@ -1,0 +1,23 @@
+{% extends 'base_logins.html' %}
+{% block content %}
+<h3 class="text-center text-primary mb-4">Recuperar Contraseña</h3>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="email" class="form-label">Correo registrado</label>
+        <input type="email" name="email" id="email" class="form-control" required placeholder="tucorreo@example.com">
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Enviar código</button>
+</form>
+
+{% if error %}
+<div class="alert alert-danger mt-3">{{ error }}</div>
+{% endif %}
+
+{% if codigo %}
+<div class="alert alert-success mt-3">
+    <strong>Código generado (simulado):</strong> {{ codigo }}
+</div>
+<a href="{% url 'validar_codigo' %}" class="btn btn-success mt-3 w-100">Ingresar código</a>
+{% endif %}
+{% endblock %}
