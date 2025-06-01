@@ -1,0 +1,55 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+    <h1 class="mt-4">Gestión de Ventas</h1>
+    <hr>
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5 class="m-0 font-weight-bold text-primary">Listado de Productos</h5>
+        </div>
+        <div class="card-body">
+            {% if pagos %}
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID Pago</th>
+                                <th>Pedido ID</th>
+                                <th>Monto</th>
+                                <th style="width: 200px;">Método</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pago in pagos %}
+                            <tr>
+                                <td>{{ pago.pago_id }}</td>
+                                <td>{{ pago.pedido_id }}</td>
+                                <td>${{ pago.monto|floatformat:0 }}</td>
+                                <td>{{ pago.metodo_pago }}</td>
+                                <td>{{ pago.estado_pago }}</td>
+                                <td>{{ pago.fecha_pago }}</td>
+                                <td>
+                                    {% if pago.metodo_pago == "Transferencia" and pago.estado_pago == "Pendiente" %}
+                                    <form method="POST" action="{% url 'aprobar_venta' pago.pago_id %}" >
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">Aprobar</button>
+                                    </form>
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No hay pagos registrados.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

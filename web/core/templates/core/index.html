@@ -71,16 +71,16 @@
                             <a href="{% url 'testimonial' %}" class="nav-item nav-link">Testimonios</a>
                             <a href="{% url 'contact' %}" class="nav-item nav-link">Contacto</a>
                             {% if request.session.user %}
-                                {% if request.session.user.rol_id == 5 %}
-                                    <a href="#" class="nav-item nav-link">Panel de Administración</a>
+                                {% if request.session.user.rol_id != 1 %}
+                                    <a href="{% url 'panel_admin_inicio' %}" class="nav-item nav-link">Panel de Administración</a>
                                 {% endif %}
                             {% endif %}
                         </div>
                         <div class="d-flex m-3 me-0">
-                                <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary ms-3" data-bs-toggle="modal" data-bs-target="#shoppingCartModal">
-                                    <i class="fa fa-shopping-bag me-2 text-primary"></i>Carrito
-                                    <span class="badge bg-danger rounded-circle ms-1" id="cart-counter">0</span>
-                                </a>
+                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary ms-3" data-bs-toggle="modal" data-bs-target="#shoppingCartModal">
+                                <i class="fa fa-shopping-bag me-2 text-primary"></i>Carrito
+                                <span class="badge bg-danger rounded-circle ms-1" id="cart-counter">0</span>
+                            </a>
                         </div>
                     </div>
                 </nav>

@@ -1,0 +1,165 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Panel de Administración</h1>
+    <hr>
+
+    <!-- Tarjetas resumen -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <h5 class="card-title">Usuarios registrados</h5>
+                    <p class="card-text display-6">{{ total_usuarios }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <h5 class="card-title">Productos en inventario</h5>
+                    <p class="card-text display-6">{{ total_productos }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <h5 class="card-title">Productos sin imagen</h5>
+                    <p class="card-text display-6">{{ productos_sin_imagen }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <h5 class="card-title">Pagos pendientes</h5>
+                    <p class="card-text display-6">{{ pagos_pendientes }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de productos -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="m-0 font-weight-bold text-primary">Distribución por Categoría</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="productosCategoriaChart" width="100%" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="m-0 font-weight-bold text-success">Distribución por Marca</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="productosMarcaChart" width="100%" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla resumen -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5 class="m-0 font-weight-bold text-primary">Últimos usuarios registrados</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in ultimos_usuarios %}
+                    <tr>
+                        <td>{{ usuario.id_usuario }}</td>
+                        <td>{{ usuario.nombre }} {{ usuario.apellido_p }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>
+                            {% if usuario.rol_id == 1 %}Cliente
+                            {% elif usuario.rol_id == 2 %}Trabajador
+                            {% elif usuario.rol_id == 3 %}Bodeguero
+                            {% elif usuario.rol_id == 4 %}Vendedor
+                            {% elif usuario.rol_id == 5 %}Administrador
+                            {% else %}Desconocido{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No hay usuarios registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const productosPorCategoria = JSON.parse('{{ productos_categoria_json|safe }}');
+    const productosPorMarca = JSON.parse('{{ productos_marca_json|safe }}');
+
+    // Gráfico de Categoría (Pie)
+    new Chart(document.getElementById('productosCategoriaChart'), {
+        type: 'pie',
+        data: {
+            labels: productosPorCategoria.map(item => item.categoria),
+            datasets: [{
+                label: 'Productos por Categoría',
+                data: productosPorCategoria.map(item => item.cantidad),
+                backgroundColor: [
+                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
+                    '#e74a3b', '#858796', '#20c997', '#fd7e14'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                title: { display: false }
+            }
+        }
+    });
+
+    // Gráfico de Marca (Bar)
+    new Chart(document.getElementById('productosMarcaChart'), {
+        type: 'bar',
+        data: {
+            labels: productosPorMarca.map(item => item.marca),
+            datasets: [{
+                label: 'Productos por Marca',
+                data: productosPorMarca.map(item => item.cantidad),
+                backgroundColor: '#1cc88a'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

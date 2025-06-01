@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Cambiar Rol de {{ usuario.nombre }} {{ usuario.apellido_p }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="rol_id">Nuevo Rol:</label>
+            <select name="rol_id" id="rol_id" class="form-control" required>
+                <option value="1" {% if usuario.rol_id == 1 %}selected{% endif %}>Cliente</option>
+                <option value="2" {% if usuario.rol_id == 2 %}selected{% endif %}>Vendedor</option>
+                <option value="3" {% if usuario.rol_id == 3 %}selected{% endif %}>Contador</option>
+                <option value="4" {% if usuario.rol_id == 4 %}selected{% endif %}>Bodeguero</option>
+                <option value="5" {% if usuario.rol_id == 5 %}selected{% endif %}>Administrador</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Actualizar Rol</button>
+        <a href="{% url 'admin_listado_usuarios' %}" class="btn btn-secondary mt-2">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,104 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Gestión de Productos</h1>
+    <hr>
+
+    <!-- Botón para agregar nuevo producto -->
+    <div class="mb-3">
+        <a href="{% url 'agregar_producto' %}" class="btn btn-success mb-3">Agregar producto</a>
+    </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <input type="text" name="nombre" class="form-control" placeholder="Buscar por nombre" value="{{ nombre_filtro }}">
+    </div>
+    <div class="col-md-3">
+        <select name="categoria" class="form-select">
+            <option value="todos">Todas las categorías</option>
+            {% for categoria in categorias %}
+                <option value="{{ categoria.nombre }}" {% if categoria.nombre == categoria_filtro %}selected{% endif %}>
+                    {{ categoria.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="marca" class="form-select">
+            <option value="todos">Todas las marcas</option>
+            {% for marca in marcas %}
+                <option value="{{ marca.nombre }}" {% if marca.nombre == marca_filtro %}selected{% endif %}>
+                    {{ marca.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+   
+    <!-- Tabla de productos -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5 class="m-0 font-weight-bold text-primary">Listado de Productos</h5>
+        </div>
+        <div class="card-body">
+            {% if productos %}
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Imagen</th>
+                                <th>Nombre</th>
+                                <th style="width: 200px;">Descripción</th>
+                                <th>Precio</th>
+                                <th>Categoría</th>
+                                <th>Marca</th>
+                                <th style="width: 180px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in productos %}
+                            <tr>
+                                <td>{{ producto.id }}</td>
+                                <td>
+                                    <img src="{{ producto.imagenUrl }}" alt="Imagen producto" width="60" height="60">
+                                </td>
+                                <td style="max-width: 50px;">{{ producto.nombre }}</td>
+                                <td class="text-truncate">{{ producto.descripcion }}</td>
+                                <td>${{ producto.precio|floatformat:0 }}</td>
+                                <td>{{ producto.categoriaNombre }}</td>
+                                <td>{{ producto.marcaNombre }}</td>
+                                <td>
+                                    <a href="{% url 'editar_producto' producto.id %}" class="btn btn-warning btn-sm">Editar</a>
+                                    <form method="post" action="{% url 'eliminar_producto' producto.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro que deseas eliminar este producto?');">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No hay productos disponibles.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

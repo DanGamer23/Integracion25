@@ -1,0 +1,67 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Editar Usuario</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>RUT</label>
+                <input type="text" name="rut" class="form-control" required value="{{ usuario.rut }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Nombre</label>
+                <input type="text" name="nombre" class="form-control" required value="{{ usuario.nombre }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Segundo Nombre</label>
+                <input type="text" name="snombre" class="form-control" value="{{ usuario.snombre }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Apellido Paterno</label>
+                <input type="text" name="apellido_p" class="form-control" required value="{{ usuario.apellido_p }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Apellido Materno</label>
+                <input type="text" name="apellido_m" class="form-control" value="{{ usuario.apellido_m }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" required value="{{ usuario.email }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Teléfono</label>
+                <input type="text" name="fono" class="form-control" value="{{ usuario.fono }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Dirección</label>
+                <input type="text" name="direccion" class="form-control" value="{{ usuario.direccion }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Contraseña (dejar en blanco para no cambiar)</label>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Ingrese nueva contraseña (opcional)">
+                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="rol_id">Rol:</label>
+                <select name="rol_id" id="rol_id" class="form-control" required>
+                    <option value="1" {% if usuario.rol_id == 1 %}selected{% endif %}>Cliente</option>
+                    <option value="2" {% if usuario.rol_id == 2 %}selected{% endif %}>Vendedor</option>
+                    <option value="3" {% if usuario.rol_id == 3 %}selected{% endif %}>Contador</option>
+                    <option value="4" {% if usuario.rol_id == 4 %}selected{% endif %}>Bodeguero</option>
+                    <option value="5" {% if usuario.rol_id == 5 %}selected{% endif %}>Administrador</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Guardar Cambios</button>
+        <a href="{% url 'admin_registro_usuarios' %}" class="btn btn-secondary mt-2">Cancelar</a>
+    </form>
+</div>
+
+{% endblock %}

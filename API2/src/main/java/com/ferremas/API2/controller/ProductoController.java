@@ -40,21 +40,34 @@ public class ProductoController {
 
     // GET: Obtener todos los productos, o una cantidad específica
     // Si se proporciona un parámetro de consulta "limit", se limita la cantidad de productos devueltos
-    @GetMapping
-    public List<Producto> obtenerProductos(@RequestParam(required = false) Optional<Integer> limit) {
-        List<Producto> allProducts = productoRepository.findAll();
+@GetMapping
+public List<ProductoDTO> obtenerProductos(@RequestParam(required = false) Optional<Integer> limit) {
+    List<Producto> productos = productoRepository.findAll();
 
-        if (limit.isPresent()) {
-            int limitValue = limit.get();
-            if (limitValue > 0 && limitValue < allProducts.size()) {
-                return allProducts.subList(0, limitValue);
-            } else {
-                return allProducts;
-            }
-        } else {
-            return allProducts;
+    if (limit.isPresent()) {
+        int limitValue = limit.get();
+        if (limitValue > 0 && limitValue < productos.size()) {
+            productos = productos.subList(0, limitValue);
         }
     }
+
+    return productos.stream().map(producto -> {
+        ProductoDTO dto = new ProductoDTO();
+        dto.setId(producto.getId());
+        dto.setNombre(producto.getNombre());
+        dto.setDescripcion(producto.getDescripcion());
+        dto.setPrecio(producto.getPrecio());
+        dto.setImagenUrl(producto.getImagenUrl());
+
+        categoriaRepository.findById(producto.getCategoriaId())
+            .ifPresent(c -> dto.setCategoriaNombre(c.getNombre()));
+        marcaRepository.findById(producto.getMarcaId())
+            .ifPresent(m -> dto.setMarcaNombre(m.getNombre()));
+
+        return dto;
+    }).collect(Collectors.toList());
+}
+
 
     // GET: Buscar productos con filtros avanzados
     @GetMapping("/filter")

@@ -7,10 +7,7 @@ DROP TABLE PAGO CASCADE CONSTRAINTS;
 DROP TABLE DETALLE_PEDIDO CASCADE CONSTRAINTS;
 DROP TABLE PEDIDO CASCADE CONSTRAINTS;
 DROP TABLE PRODUCTO CASCADE CONSTRAINTS;
-DROP TABLE ESTADO CASCADE CONSTRAINTS;
 DROP TABLE USUARIO CASCADE CONSTRAINTS;
-DROP TABLE METODO_PAGO CASCADE CONSTRAINTS;
-DROP TABLE ESTADO_PAGO CASCADE CONSTRAINTS;
 DROP TABLE CATEGORIA CASCADE CONSTRAINTS;
 DROP TABLE MARCA CASCADE CONSTRAINTS;
 DROP TABLE ROL CASCADE CONSTRAINTS;
@@ -46,19 +43,6 @@ CREATE TABLE CATEGORIA (
     nombre VARCHAR2(1000) NOT NULL
 );
 
--- Tabla ESTADO_PAGO
-CREATE TABLE ESTADO_PAGO (
-    estado_pago_id NUMBER(10) PRIMARY KEY,
-    nombre VARCHAR2(100) NOT NULL
-);
-
--- Tabla METODO_PAGO
-CREATE TABLE METODO_PAGO (
-    metodo_pago NUMBER(10) PRIMARY KEY,
-    nombre VARCHAR2(100) NOT NULL
-);
-
-
 -- Tabla USUARIO
 CREATE TABLE USUARIO (
     id_usuario NUMBER(10) PRIMARY KEY,
@@ -76,13 +60,6 @@ CREATE TABLE USUARIO (
     CONSTRAINT USUARIO_ROL_FK FOREIGN KEY (rol_id)
 	REFERENCES ROL(rol_id) ON DELETE CASCADE
 );
-
--- Tabla ESTADO
-CREATE TABLE ESTADO (
-    estado_id NUMBER(10) PRIMARY KEY,
-    nombre VARCHAR2(100) NOT NULL
-);
-
 
 -- Tabla PRODUCTO
 CREATE TABLE PRODUCTO (
@@ -104,12 +81,9 @@ CREATE TABLE PEDIDO (
     pedido_id NUMBER(10) PRIMARY KEY,
     cliente_id NUMBER(10) NOT NULL,
     fecha_pedido DATE DEFAULT SYSDATE NOT NULL,
-    estado_id NUMBER(10) NOT NULL,
-    sucursal_retiro NUMBER(10),
+    estado VARCHAR2(50) DEFAULT 'Pendiente' NOT NULL,
     total NUMBER(10) NOT NULL,
     vendedor_id NUMBER(10) NOT NULL,
-    CONSTRAINT PEDIDO_ESTADO_FK FOREIGN KEY (estado_id) 
-        REFERENCES ESTADO(estado_id) ON DELETE CASCADE,
     CONSTRAINT PEDIDO_USUARIO_FK FOREIGN KEY (cliente_id) 
         REFERENCES USUARIO(id_usuario) ON DELETE CASCADE,
     CONSTRAINT PEDIDO_VENDEDOR_FK FOREIGN KEY (vendedor_id) 
@@ -133,19 +107,13 @@ CREATE TABLE DETALLE_PEDIDO (
 CREATE TABLE PAGO (
     pago_id NUMBER(10) PRIMARY KEY,
     pedido_id NUMBER(10) NOT NULL,
-    metodo_pago_id NUMBER(10) NOT NULL,
     monto NUMBER(10) NOT NULL,
     fecha_pago DATE DEFAULT SYSDATE NOT NULL,
-    estado_pago_id NUMBER(10) NOT NULL,
-    transaccion_id VARCHAR2(200),
-    detalle VARCHAR2(200),
     contador_id NUMBER(10),
+    metodo_pago VARCHAR2(50),
+    estado_pago VARCHAR2(50),
     CONSTRAINT PAGO_PEDIDO_FK FOREIGN KEY (pedido_id) 
         REFERENCES PEDIDO(pedido_id) ON DELETE CASCADE,
-    CONSTRAINT PAGO_METODO_PAGO_FK FOREIGN KEY (metodo_pago_id) 
-        REFERENCES METODO_PAGO(metodo_pago) ON DELETE CASCADE,
-    CONSTRAINT PAGO_ESTADO_PAGO_FK FOREIGN KEY (estado_pago_id) 
-        REFERENCES ESTADO_PAGO(estado_pago_id) ON DELETE CASCADE,
     CONSTRAINT PAGO_USUARIO_FK FOREIGN KEY (contador_id) 
         REFERENCES USUARIO(id_usuario) ON DELETE SET NULL
 );
@@ -271,5 +239,19 @@ INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, ma
 VALUES (24, 'Motosierra a Gasolina 50cc', 'Potente motosierra de 50cc con barra de 20 pulgadas. Ideal para cortar árboles y leña.', 200000, 2, 104, '/static/img/productos/motosierra_makita_grande.jpg');
 INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, marca_id, imagen)
 VALUES (25, 'Juego de Brocas para Concreto', 'Set de 5 brocas SDS Plus para concreto y ladrillo. Medidas de 6mm a 12mm.', 20000, 2, 101, '/static/img/productos/brocas_concreto_bosch.jpg');
+
+-- Pedido de prueba
+INSERT INTO PEDIDO (pedido_id, cliente_id, fecha_pedido, estado, total, vendedor_id)
+VALUES (100, 1, SYSDATE, 'Aprobado', 15000, 2);
+
+INSERT INTO PEDIDO (pedido_id, cliente_id, fecha_pedido, estado, total, vendedor_id)
+VALUES (101, 1, SYSDATE, 'Pendiente', 15000, 2);
+
+INSERT INTO PAGO (pago_id, pedido_id, monto, fecha_pago, contador_id, metodo_pago, estado_pago)
+VALUES (200, 100, 15000, SYSDATE, 3, 'Tarjeta de Crédito', 'Aprobado');
+
+INSERT INTO PAGO (pago_id, pedido_id, monto, fecha_pago, contador_id, metodo_pago, estado_pago)
+VALUES (201, 101, 25000, SYSDATE, null, 'Transferencia', 'Pendiente');
+
 COMMIT;
 
