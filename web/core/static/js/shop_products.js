@@ -27,6 +27,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }).format(price);
     }
 
+    // Función para mostrar valor en USD
+    function formatUSD(amount) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+    }).format(amount);
+    }
+
+    async function obtenerValorDolar() {
+    try {
+        const response = await fetch("/api/valor-dolar/");
+        const data = await response.json();
+        return data.valor_dolar || null;
+    } catch (error) {
+        console.error("Error al obtener el valor del dólar:", error);
+        return null;
+    }
+}
+
+
     // Función para mostrar Toasts (NOTIFICACIONES)
     function showToast(message, type = 'success') {
         const toastContainer = document.querySelector('.toast-container');
@@ -141,6 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderCartModalContent() {
+        console.log("⚠️ renderCartModalContent se está ejecutando");
+
         cartItemsContainer.innerHTML = '';
         if (cart.length === 0) {
             cartEmptyMessage.style.display = 'block';
@@ -178,10 +201,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 cartItemsContainer.appendChild(cartItemDiv);
             });
             cartTotalElement.textContent = formatPrice(total);
-        }
-        updateCartCounter();
-    }
+            // Mostrar el total en USD
+const cartTotalUSDContainer = document.getElementById('cart-total-usd');
+if (cartTotalUSDContainer && total > 0) {
+    fetch("http://127.0.0.1:8001/api/valor-dolar/")
+        .then(response => response.json())
+        .then(data => {
+            console.log("📦 Dólar recibido:", data);
 
+            const valorDolar = parseFloat(data.valor_dolar);
+            if (valorDolar && !isNaN(valorDolar)) {
+                const totalUSD = total / valorDolar;
+                console.log("💵 totalCLP:", total, "valor_dolar:", valorDolar, "→ totalUSD:", totalUSD);
+
+                cartTotalUSDContainer.textContent = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(totalUSD);
+            } else {
+                console.warn("⚠️ valor_dolar inválido:", data.valor_dolar);
+                cartTotalUSDContainer.textContent = "USD N/D";
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error al obtener el valor del dólar:", error);
+            cartTotalUSDContainer.textContent = "USD N/D";
+        });
+} else if (cartTotalUSDContainer) {
+    cartTotalUSDContainer.textContent = "$0.00";
+}}
+
+    }
     function updateCartCounter() {
         const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         cartCounter.textContent = itemCount;
@@ -649,7 +699,7 @@ function loadBrands() {
     });
 
     // Evento para cuando se abre el modal del carrito
-    shoppingCartModalElement.addEventListener('show.bs.modal', renderCartModalContent);
+    shoppingCartModalElement.addEventListener('shown.bs.modal', renderCartModalContent);
 
     // --- Inicialización al cargar la página ---
     loadCart(); // SIEMPRE cargar el carrito desde sessionStorage al inicio de CUALQUIER página

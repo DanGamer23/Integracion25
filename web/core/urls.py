@@ -29,4 +29,6 @@ urlpatterns = [
     path('panel/productos/editar/<int:producto_id>/', views.editar_producto, name='editar_producto'),
     path('panel/ventas/', views.ventas, name='ventas'),
     path('panel/ventas/aprobar/<int:pago_id>/', views.aprobar_venta, name='aprobar_venta'),
+    path('api/valor-dolar/', views.obtener_valor_dolar, name='valor_dolar'),
+
 ]

@@ -1,3 +1,4 @@
+import traceback
 import requests
 import mercadopago
 
@@ -53,6 +54,8 @@ def contact_view(request):
 def testimonial_view(request):
     return render(request, 'core/testimonial.html')
 
+
+
 @csrf_exempt
 def iniciar_pago(request):
     if request.method != 'POST':
@@ -84,6 +87,7 @@ def iniciar_pago(request):
                 "failure": "http://127.0.0.1:8001/pago-fallido/",
                 "pending": "http://127.0.0.1:8001/pago-pendiente/"
             },
+
         }
 
         # Crear la preferencia en Mercado Pago
@@ -104,6 +108,7 @@ def iniciar_pago(request):
 
     except Exception as e:
         print("Error al crear preferencia:", str(e))
+        traceback.print_exc()
         return JsonResponse({"error": "Error interno del servidor"}, status=500)
 
 def pago_exitoso(request):
@@ -704,6 +709,17 @@ def aprobar_venta(request, pago_id):
     return redirect("ventas")
 
 
+def obtener_valor_dolar(request):
+    try:
+        response = requests.get("https://open.er-api.com/v6/latest/CLP")
+        data = response.json()
+        valor_usd = data["rates"]["USD"]  # Cuántos USD vale 1 CLP
+        return JsonResponse({"valor_dolar": 1 / valor_usd})  # Cuántos CLP vale 1 USD
+    except Exception as e:
+        print("ERROR al obtener dólar:", e)
+        return JsonResponse({"error": "No se pudo obtener el valor del dólar."}, status=500)
+    
+    
 def page_not_found_view(request, exception):
     return render(request, 'core/404.html', status=404)
 
