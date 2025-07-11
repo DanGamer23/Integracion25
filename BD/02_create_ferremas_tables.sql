@@ -55,6 +55,8 @@ CREATE TABLE USUARIO (
     fono VARCHAR2(20),
     direccion VARCHAR2(200),
     password VARCHAR2(200) NOT NULL,
+    intentos_fallidos NUMBER(2) DEFAULT 0 NOT NULL,
+    bloqueado_hasta TIMESTAMP,
     rol_id number(1) NOT NULL,
     requiere_cambio_password NUMBER(1) DEFAULT 0 NOT NULL,
     CONSTRAINT USUARIO_ROL_FK FOREIGN KEY (rol_id)
@@ -74,6 +76,7 @@ CREATE TABLE PRODUCTO (
         REFERENCES CATEGORIA(categoria_id) ON DELETE CASCADE,
     CONSTRAINT PRODUCTO_MARCA_FK FOREIGN KEY (marca_id) 
         REFERENCES MARCA(marca_id) ON DELETE CASCADE
+        
 );
 
 -- Tabla PEDIDO
@@ -252,6 +255,9 @@ VALUES (200, 100, 15000, SYSDATE, 3, 'Tarjeta de Crédito', 'Aprobado');
 
 INSERT INTO PAGO (pago_id, pedido_id, monto, fecha_pago, contador_id, metodo_pago, estado_pago)
 VALUES (201, 101, 25000, SYSDATE, null, 'Transferencia', 'Pendiente');
+
+ALTER TABLE PRODUCTO ADD CONSTRAINT UNQ_PRODUCTO_NOMBRE UNIQUE (nombre);
+
 
 COMMIT;
 

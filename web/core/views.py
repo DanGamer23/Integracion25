@@ -131,19 +131,23 @@ def login_view(request):
 
         try:
             response = requests.post(
-                'http://ferremas-api1:8000/clientes/login/',
+                'http://ferremas-api1:8000/clientes/login',
                 params={'email': email, 'password': password})
             if response.status_code == 200:
                 user_data = response.json()
-                request.session['user'] = user_data # Guardar datos del usuario en la sesión
+                request.session['user'] = user_data
 
                 if user_data.get("rol_id") == 5 and user_data.get("requiere_cambio_password") == 1:
-                    # Si el usuario es un administrador y requiere cambiar la contraseña
                     return redirect('/cambiar_password')
                 
                 return redirect('/')  # Redirigir a la página principal después del login exitoso
             else:
-                return render(request, 'core/login.html', {'error': 'Credenciales inválidas'})
+                try:
+                    error_detail = response.json().get('detail', 'Error desconocido')
+                except Exception:
+                    error_detail = 'Error inesperado al procesar el login'
+
+                return render(request, 'core/login.html', {'error': error_detail})
         except Exception as e:
             import traceback
             traceback.print_exc()  # Muestra la traza completa del error
@@ -167,7 +171,7 @@ def cambiar_password_view(request):
         # Enviar la nueva contraseña al API para actualizarla
         response = requests.post(
             'http://ferremas-api1:8000/clientes/cambiar_password/',
-            json={'id_usuario': user['id_usuario'], 'nueva_password': nueva_password}
+            json={'email': user['email'], 'nueva_password': nueva_password}
         )
 
         if response.status_code == 200:
@@ -278,6 +282,9 @@ def register_view(request):
     return render(request, "core/registrar.html")
 
 def panel_admin_inicio(request):
+    user = request.session.get("user")
+    if not user or user.get("rol_id", 1) == 1:
+        return redirect("/")  # Redirige a inicio si es cliente o no logueado
     # Obtener usuarios
     try:
         response_usuarios = requests.get("http://ferremas-api1:8000/clientes/")

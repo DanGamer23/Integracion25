@@ -5,6 +5,7 @@ from passlib.hash import bcrypt
 import random
 from datetime import datetime
 import traceback
+from datetime import datetime, timedelta
 
 router = APIRouter(
     prefix="/clientes",
@@ -255,25 +256,87 @@ def actualizar_patch(id_actualizar:int, rut:Optional[str]=None, nombre:Optional[
         raise HTTPException(status_code=500, detail=str(ex))
 
 @router.post("/login")
-def login(email:str, password:str):
+def login(email: str, password: str):
     try:
         cone = get_conexion()
         cursor = cone.cursor()
 
         cursor.execute("""
             SELECT 
-                id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, rol_id, requiere_cambio_password
+                id_usuario, rut, nombre, apellido_p, apellido_m, snombre, email, fono, direccion, password, intentos_fallidos, bloqueado_hasta, rol_id, requiere_cambio_password
             FROM USUARIO
             WHERE email = :email
-        """, {"email": email,})
+        """, {"email": email})
         usuario = cursor.fetchone()
-        cursor.close()
-        cone.close()
+
         if not usuario:
+            cursor.close()
+            cone.close()
             raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+
+        intentos_fallidos = usuario[10]
+        bloqueado_hasta = usuario[11]
+
+        # Revisar si está bloqueado
+        now = datetime.now()
+        if bloqueado_hasta is not None and bloqueado_hasta > now:
+            cursor.close()
+            cone.close()
+            tiempo_restante = bloqueado_hasta - now
+            total_segundos = int(tiempo_restante.total_seconds())
+            minutos = total_segundos // 60
+            segundos = total_segundos % 60
+            raise HTTPException(
+                status_code=403,
+                detail=f"Usuario bloqueado. Intente nuevamente en {minutos} minutos y {segundos} segundos."
+            )
+
         stored_password_hash = usuario[9]
         if not bcrypt.verify(password, stored_password_hash):
-            raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+            # Incrementar intentos fallidos
+            intentos_fallidos = (intentos_fallidos or 0) + 1
+            update_data = {
+                "intentos_fallidos": intentos_fallidos,
+                "email": email
+            }
+            bloqueado = False
+            if intentos_fallidos >= 5:
+                bloqueado_hasta_nuevo = now + timedelta(minutes=10)
+                update_data["bloqueado_hasta"] = bloqueado_hasta_nuevo.strftime("%Y-%m-%d %H:%M:%S")
+                bloqueado = True
+                cursor.execute("""
+                    UPDATE USUARIO SET intentos_fallidos = :intentos_fallidos, bloqueado_hasta = TO_DATE(:bloqueado_hasta, 'YYYY-MM-DD HH24:MI:SS')
+                    WHERE email = :email
+                """, update_data)
+            else:
+                cursor.execute("""
+                    UPDATE USUARIO SET intentos_fallidos = :intentos_fallidos
+                    WHERE email = :email
+                """, update_data)
+            cone.commit()
+
+            # Vuelve a consultar el usuario para ver si está bloqueado
+            cursor.execute("""
+                SELECT bloqueado_hasta FROM USUARIO WHERE email = :email
+            """, {"email": email})
+            nuevo_bloqueado_hasta = cursor.fetchone()[0]
+            cursor.close()
+            cone.close()
+            if nuevo_bloqueado_hasta is not None and nuevo_bloqueado_hasta > now:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Usuario bloqueado por 10 minutos debido a múltiples intentos fallidos."
+                )
+            else:
+                raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+        # Si login exitoso, resetear intentos y bloqueo
+        cursor.execute("""
+            UPDATE USUARIO SET intentos_fallidos = 0, bloqueado_hasta = NULL
+            WHERE email = :email
+        """, {"email": email})
+        cone.commit()
+        cursor.close()
+        cone.close()
         return {
             "id_usuario": usuario[0],
             "rut": usuario[1],
@@ -284,10 +347,14 @@ def login(email:str, password:str):
             "email": usuario[6],
             "fono": usuario[7],
             "direccion": usuario[8],
-            "rol_id": usuario[10],
-            "requiere_cambio_password": usuario[11]
+            "rol_id": usuario[12],
+            "requiere_cambio_password": usuario[13]
         }
+    except HTTPException:
+        raise
     except Exception as ex:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(ex))
 
 @router.post("/cambiar_password")

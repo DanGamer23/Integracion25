@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSpecificationExecutor<Producto> {
@@ -16,5 +17,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
     List<Producto> findByMarcaId(Long marcaId);
     List<Producto> findByNombreContainingIgnoreCase(String nombre); // Método para buscar productos por nombre (sin distinción de mayúsculas y minúsculas)
     List<Producto> findByCategoriaIdAndMarcaId(Long categoriaId, Long marcaId); // Método para buscar productos por categoría y marca
+    Optional<Producto> findByNombre(String nombre); // Método para buscar un producto por nombre exacto
 }
 

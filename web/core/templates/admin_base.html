@@ -48,6 +48,7 @@
     </style>
 </head>
 <body>
+    
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="sidebar p-3">
@@ -78,16 +79,15 @@
             </nav>
         </div>
 
-        <!-- Main content -->
+
         <div class="content flex-grow-1">
             <div class="container-fluid">
                 {% block content %}
-                <!-- Aquí va el contenido de cada página -->
+                
                 {% endblock %}
             </div>
         </div>
     </div>
-
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const toggles = document.querySelectorAll(".toggle-password");
