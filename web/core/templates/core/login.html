@@ -28,6 +28,12 @@
     <a href="{% url 'registrar' %}">¿No tienes cuenta? Regístrate</a>
 </div>
 
+<script>
+    // Esto garantiza que el carrito no persista entre sesiones de usuarios distintos
+    localStorage.removeItem("carrito");
+    sessionStorage.clear();  // También puedes usar esto si quieres limpiar todo
+</script>
+
 {% if error %}
 <div class="alert alert-danger mt-3 text-center">{{ error }}</div>
 {% endif %}

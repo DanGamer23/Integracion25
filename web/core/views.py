@@ -1,15 +1,19 @@
+from datetime import datetime, timedelta
 import traceback
+from django.urls import reverse
 import requests
 import mercadopago
+import pandas as pd
 
 import json
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from collections import defaultdict
+from .conexion import get_conexion
 
 def index_view(request):
     return render(request, 'core/index.html') # El nombre es 'core/index.html' por la estructura
@@ -301,16 +305,15 @@ def panel_admin_inicio(request):
     except requests.RequestException:
         productos = []
 
-    # Obtener pagos
+    # Contar pagos pendientes directo en DB
+    pagos_pendientes = 0
     try:
-        response_pagos = requests.get("http://ferremas-api1:8000/pagos")
-        response_pagos.raise_for_status()
-        pagos = response_pagos.json()
-    except requests.RequestException:
-        pagos = []
-
-    # Contar pagos pendientes
-    pagos_pendientes = len([p for p in pagos if p.get("estado_pago", "").lower() == "pendiente"])
+        with get_conexion() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM PAGO WHERE estado_pago = 'Pendiente'")
+            pagos_pendientes = cursor.fetchone()[0]
+    except Exception as e:
+        print("Error al obtener pagos pendientes:", e)
 
     # Procesar productos por categoría
     productos_por_categoria = {}
@@ -680,8 +683,9 @@ def editar_producto(request, producto_id):
 
 
 def logout_view(request):
-    request.session.flush()  # Elimina todos los datos de la sesión
-    return redirect('/')  # Redirige a la página principal después del logout
+    request.session.flush()
+    return redirect('/?logout=1')
+
 
 def ventas(request):
 
@@ -725,8 +729,444 @@ def obtener_valor_dolar(request):
     except Exception as e:
         print("ERROR al obtener dólar:", e)
         return JsonResponse({"error": "No se pudo obtener el valor del dólar."}, status=500)
-    
-    
+
+
+def pago_transferencia_view(request):
+    return render(request, 'core/pago_transferencia.html')
+
+
+@csrf_exempt
+def confirmar_transferencia(request):
+    if request.method == 'POST':
+        tipo_entrega = request.POST.get('tipo_entrega')
+        cart_raw = request.POST.get('cart', '[]')
+
+        try:
+            carrito = json.loads(cart_raw)
+        except Exception as e:
+            carrito = []
+
+        if not carrito:
+            return render(request, 'core/pago_error.html', {"mensaje": "El carrito está vacío"})
+
+        total = sum([item['precio'] * item['quantity'] for item in carrito])
+
+        try:
+            cone = get_conexion()
+            cursor = cone.cursor()
+
+            # 1. Insertar en PEDIDO
+            pedido_out = cursor.var(int)
+            cursor.execute("""
+                BEGIN
+                    INSERT INTO PEDIDO (pedido_id, fecha_pedido, estado, tipo_entrega, total, cliente_id, vendedor_id)
+                    VALUES (seq_pedido_id.nextval, SYSDATE, 'Pendiente', :tipo_entrega, :total, :cliente_id, :vendedor_id)
+                    RETURNING pedido_id INTO :pedido_out;
+                END;
+            """, {
+                "tipo_entrega": tipo_entrega,
+                "total": total,
+                "cliente_id": request.session["user"]["id_usuario"],
+                "vendedor_id": None,
+                "pedido_out": pedido_out
+            })
+            pedido_id = pedido_out.getvalue()
+
+            # 2. Insertar en PAGO
+            cursor.execute("""
+                INSERT INTO PAGO (pago_id, pedido_id, monto, metodo_pago, estado_pago)
+                VALUES (seq_pago_id.nextval, :pedido_id, :monto, 'Transferencia', 'Pendiente')
+            """, {
+                "pedido_id": pedido_id,
+                "monto": total
+            })
+            # 3. Insertar en DETALLE_PEDIDO
+            for item in carrito:
+                cursor.execute("""
+                    INSERT INTO DETALLE_PEDIDO (detalle_id, pedido_id, producto_id, cantidad, precio_unit)
+                    VALUES (seq_detalle_pedido_id.nextval, :pedido_id, :producto_id, :cantidad, :precio)
+                """, {
+                    "pedido_id": pedido_id,
+                    "producto_id": item["id"],
+                    "cantidad": item["quantity"],
+                    "precio": item["precio"]
+                })
+            cone.commit()
+            cursor.close()
+            cone.close()
+            return render(request, 'core/pago_exitoso.html', {
+                "pedido_id": pedido_id,
+                "monto": total
+            })
+
+        except Exception as e:
+            traceback.print_exc()
+            return render(request, 'core/pago_error.html', {"mensaje": "Error al guardar el pedido o pago."})
+
+
+def listar_pedidos_admin(request):
+    user = request.session.get("user")
+    if not user or user.get("rol_id", 1) == 1:
+        return redirect("/")  # Solo para usuarios no clientes y logueados
+
+    try:
+        response = requests.get("http://ferremas-api1:8000/pedidos/listar")
+        response.raise_for_status()
+        pedidos = response.json()
+
+        
+        # o formatear fechas si quieres. Por ejemplo:
+        for pedido in pedidos:
+            fecha_str = pedido.get("fecha_pedido")
+            if fecha_str:
+                dt = datetime.strptime(fecha_str, "%Y-%m-%d %H:%M:%S")
+                dt_chile = dt - timedelta(hours=4) 
+                pedido["fecha_pedido"] = dt_chile.strftime("%d-%m-%Y %H:%M:%S")  
+            # Si tienes nombres completos en la API, solo omite esto
+            for pedido in pedidos:
+                pedido["cliente"] = pedido.get("cliente_nombre", "Desconocido")
+
+
+    except requests.RequestException:
+        pedidos = []
+
+    return render(request, "core/pedidos.html", {
+        "pedidos": pedidos
+    })
+
+@csrf_exempt
+def aprobar_pedido_view(request, pedido_id):
+    if request.method == "POST":
+        accion = request.POST.get("accion")  # "aprobar" o "rechazar"
+        nuevo_estado = "Aprobado" if accion == "aprobar" else "Rechazado"
+
+        try:
+            response = requests.patch(
+                f"http://ferremas-api1:8000/pedidos/actualizar/{pedido_id}",
+                json={"estado": nuevo_estado}
+            )
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            try:
+                # Intentamos extraer el mensaje de error JSON de la API
+                mensaje = response.json().get("detail", "Error al actualizar el estado.")
+            except:
+                mensaje = "Error al conectar con la API."
+            # Redirigimos con el mensaje como parámetro GET
+            return redirect(f"{reverse('listar_pedidos')}?error={mensaje}")
+
+        return redirect("listar_pedidos")
+
+
+
+@csrf_exempt
+def enviar_a_bodega_view(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            response = requests.patch(f"http://ferremas-api1:8000/pedidos/enviar-bodega/{pedido_id}")
+            response.raise_for_status()
+        except requests.RequestException:
+            pass
+
+    return redirect("listar_pedidos")
+
+
+def ordenes_bodega_view(request):
+    user = request.session.get("user")
+    if not user or user.get("rol_id") != 4 and user.get("rol_id") != 5:
+        return redirect("panel_admin_inicio")  # Solo acceso para bodegueros
+
+    try:
+        response = requests.get("http://ferremas-api1:8000/pedidos/listar-en-preparacion")
+        response.raise_for_status()
+        pedidos = response.json()
+        estado_legible = {
+            "En preparación": "No preparado",
+            "Preparando": "Preparando",
+            "Listo": "Listo para entrega"
+        }
+        for pedido in pedidos:
+            fecha_str = pedido.get("fecha_pedido")
+            if fecha_str:
+                dt = datetime.strptime(fecha_str, "%Y-%m-%d %H:%M:%S")
+                dt_chile = dt - timedelta(hours=4)
+                pedido["fecha_pedido"] = dt_chile.strftime("%d-%m-%Y %H:%M:%S")
+
+            pedido["cliente"] = pedido.get("cliente_nombre", "Desconocido")
+            pedido["estado_legible"] = estado_legible.get(pedido.get("estado", ""), pedido.get("estado"))
+
+    except requests.RequestException:
+        pedidos = []
+
+    return render(request, "core/ordenes_bodega.html", {
+        "ordenes": pedidos
+    })
+
+@csrf_exempt
+def aceptar_preparacion_view(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            requests.patch(f"http://ferremas-api1:8000/pedidos/preparar/{pedido_id}")
+        except requests.RequestException:
+            pass
+    return redirect("ordenes_bodega")
+
+@csrf_exempt
+def entregar_a_vendedor_view(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            requests.patch(f"http://ferremas-api1:8000/pedidos/entregar-vendedor/{pedido_id}")
+        except requests.RequestException:
+            pass
+    return redirect("ordenes_bodega")
+
+def listar_entregas(request):
+    user = request.session.get("user")
+    if not user or user.get("rol_id") != 5 and user.get("rol_id") != 2: 
+        return redirect("/")
+
+    try:
+        response = requests.get("http://ferremas-api1:8000/pedidos/listar")
+        response.raise_for_status()
+        pedidos = response.json()
+
+        entregas = []
+        for pedido in pedidos:
+            if pedido.get("estado") in ["Listo", "Enviado", "Entregado"]:  # Solo los que necesitan entrega
+                fecha_str = pedido.get("fecha_pedido")
+                if fecha_str:
+                    dt = datetime.strptime(fecha_str, "%Y-%m-%d %H:%M:%S")
+                    dt_chile = dt - timedelta(hours=4)
+                    pedido["fecha_pedido"] = dt_chile.strftime("%d-%m-%Y %H:%M:%S")
+                pedido["cliente"] = pedido.get("cliente_nombre", "Desconocido")
+                entregas.append(pedido)
+
+    except requests.RequestException:
+        entregas = []
+
+    return render(request, "core/entregas.html", {
+        "entregas": entregas
+    })
+
+@csrf_exempt
+def marcar_enviado_view(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            requests.patch(f"http://ferremas-api1:8000/pedidos/actualizar/{pedido_id}", json={"estado": "Enviado"})
+        except:
+            pass
+    return redirect("listar_entregas")
+
+
+@csrf_exempt
+def marcar_entregado_view(request, pedido_id):
+    if request.method == 'POST':
+        try:
+            requests.patch(f"http://ferremas-api1:8000/pedidos/actualizar/{pedido_id}", json={"estado": "Entregado"})
+        except:
+            pass
+    return redirect("listar_entregas")
+
+def reportes_view(request):
+    return render(request, "core/reportes.html")
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def generar_reporte_view(request):
+    tipo = request.GET.get("tipo")
+    fecha_str = request.GET.get("fecha")
+
+    if not tipo or not fecha_str:
+        return render(request, "core/reportes.html", {"mensaje": "Faltan datos"})
+
+    try:
+        fecha_base = datetime.strptime(fecha_str, "%Y-%m-%d")
+    except ValueError:
+        return render(request, "core/reportes.html", {"mensaje": "Fecha inválida"})
+
+    # Calcular rango de fechas
+    if tipo == "diario":
+        inicio = fecha_base
+        fin = inicio + timedelta(days=1)
+    elif tipo == "semanal":
+        inicio = fecha_base - timedelta(days=fecha_base.weekday())
+        fin = inicio + timedelta(days=7)
+    elif tipo == "mensual":
+        inicio = fecha_base.replace(day=1)
+        if inicio.month == 12:
+            fin = inicio.replace(year=inicio.year + 1, month=1, day=1)
+        else:
+            fin = inicio.replace(month=inicio.month + 1, day=1)
+    else:
+        return render(request, "core/reportes.html", {"mensaje": "Tipo inválido"})
+
+    # Obtener pedidos
+    try:
+            response = requests.get("http://ferremas-api1:8000/pedidos/listar")
+            response.raise_for_status()
+            pedidos = response.json()
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"HTTP error al obtener pedidos: {e}")
+        return render(request, "core/reportes.html", {"mensaje": f"Error HTTP: {e}"})
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Error de conexión al obtener pedidos: {e}")
+        return render(request, "core/reportes.html", {"mensaje": "No se pudo conectar con el servidor API"})
+    except requests.exceptions.Timeout as e:
+        logger.error(f"Timeout al obtener pedidos: {e}")
+        return render(request, "core/reportes.html", {"mensaje": "Tiempo de espera agotado al consultar API"})
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener pedidos: {e}")
+        return render(request, "core/reportes.html", {"mensaje": "Error inesperado al obtener datos"})
+
+    # Filtrar entregados en rango
+    pedidos_filtrados = []
+    for p in pedidos:
+        fecha = datetime.strptime(p["fecha_pedido"], "%Y-%m-%d %H:%M:%S")
+        if inicio <= fecha < fin and p["estado"].lower() not in ["pendiente", "rechazado"]:
+            pedidos_filtrados.append(p)
+
+    if not pedidos_filtrados:
+        return render(request, "core/reportes.html", {
+            "mensaje": "No hay ventas registradas en ese rango.",
+            "tipo": tipo,
+            "fecha": fecha_str
+        })
+
+    # Crear DataFrame y renombrar columnas
+    df = pd.DataFrame(pedidos_filtrados)
+    df = df[["pedido_id", "cliente_nombre", "fecha_pedido", "total", "tipo_entrega", "estado"]]
+    df.columns = ["ID", "Cliente", "Fecha", "Total", "Entrega", "Estado"]
+
+    # Formatear la columna "Total" con $ y sin decimales
+    df["Total"] = df["Total"].apply(lambda x: f"${int(x):,}".replace(",", "."))
+
+    # Convertir a HTML con estilo alineado a la izquierda
+    tabla_html = df.to_html(
+        classes="table table-striped table-bordered text-start",
+        index=False,
+        escape=False,
+        justify='left'
+    )
+
+    return render(request, "core/reportes.html", {
+        "tabla": tabla_html,
+        "tipo": tipo,
+        "fecha": fecha_str
+    })
+
+import io
+from django.http import FileResponse
+
+def descargar_reporte_excel(request, tipo, fecha):
+    fecha_base = datetime.strptime(fecha, "%Y-%m-%d")
+
+    # Mismo cálculo de fechas que antes...
+    if tipo == "diario":
+        inicio = fecha_base
+        fin = inicio + timedelta(days=1)
+    elif tipo == "semanal":
+        inicio = fecha_base - timedelta(days=fecha_base.weekday())
+        fin = inicio + timedelta(days=7)
+    elif tipo == "mensual":
+        inicio = fecha_base.replace(day=1)
+        if inicio.month == 12:
+            fin = inicio.replace(year=inicio.year + 1, month=1, day=1)
+        else:
+            fin = inicio.replace(month=inicio.month + 1, day=1)
+
+    response = requests.get("http://ferremas-api1:8000/pedidos/listar")
+    pedidos = response.json()
+
+    pedidos_filtrados = []
+    for p in pedidos:
+        fecha_p = datetime.strptime(p["fecha_pedido"], "%Y-%m-%d %H:%M:%S")
+        if inicio <= fecha_p < fin and p["estado"].lower() not in ["pendiente", "rechazado"]:
+            pedidos_filtrados.append(p)
+
+    df = pd.DataFrame(pedidos_filtrados)
+    df = df[["pedido_id", "cliente_nombre", "fecha_pedido", "total", "tipo_entrega", "estado"]]
+    df.columns = ["ID", "Cliente", "Fecha", "Total", "Entrega", "Estado"]
+
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name="Ventas")
+
+    buffer.seek(0)
+    nombre = f"reporte_{tipo}_{inicio.strftime('%Y%m%d')}.xlsx"
+    return FileResponse(buffer, as_attachment=True, filename=nombre)
+
+import weasyprint 
+from django.template.loader import render_to_string
+
+def generar_reporte_pdf(request, tipo, fecha):
+    # Lógica igual para calcular rango fechas
+    fecha_base = datetime.strptime(fecha, "%Y-%m-%d")
+    if tipo == "diario":
+        inicio = fecha_base
+        fin = inicio + timedelta(days=1)
+    elif tipo == "semanal":
+        inicio = fecha_base - timedelta(days=fecha_base.weekday())
+        fin = inicio + timedelta(days=7)
+    elif tipo == "mensual":
+        inicio = fecha_base.replace(day=1)
+        if inicio.month == 12:
+            fin = inicio.replace(year=inicio.year + 1, month=1, day=1)
+        else:
+            fin = inicio.replace(month=inicio.month + 1, day=1)
+
+    # Obtener pedidos (igual que en Excel)
+    response = requests.get("http://ferremas-api1:8000/pedidos/listar")  # Sin filtro de estado
+    pedidos = response.json()
+    logger.info(f"Respuesta completa API pedidos: {pedidos}")
+    logger.info(f"Total pedidos API: {len(pedidos)}")
+
+    pedidos_filtrados = []
+    for p in pedidos:
+        fecha_p = datetime.strptime(p["fecha_pedido"], "%Y-%m-%d %H:%M:%S")
+        if inicio <= fecha_p < fin and p["estado"].lower() not in ["pendiente", "rechazado"]:
+            pedidos_filtrados.append(p)
+
+    # Renderizar template a HTML string
+    html_string = render_to_string('core/reporte_pdf.html', {
+        "pedidos": pedidos_filtrados,
+        "tipo": tipo,
+        "fecha": fecha,
+    })
+
+    # Generar PDF con WeasyPrint
+    pdf_file = weasyprint.HTML(string=html_string).write_pdf()
+
+    # Devolver respuesta con PDF
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    nombre = f"reporte_{tipo}_{inicio.strftime('%Y%m%d')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{nombre}"'
+    return response
+
+
+def mis_pedidos(request):
+    user = request.session.get('user')
+    if not user or user.get('rol_id') != 1:
+        return redirect('/')
+
+    cliente_id = user.get('id_usuario') 
+
+    try:
+        response = requests.get(f"http://ferremas-api1:8000/pedidos/usuario/{cliente_id}")
+        response.raise_for_status()
+        pedidos = response.json()
+
+        for pedido in pedidos:
+            pedido['fecha_pedido'] = datetime.strptime(pedido['fecha_pedido'], '%Y-%m-%d %H:%M:%S')
+
+    except Exception as e:
+        pedidos = []
+        # opcional: loggear error
+
+    return render(request, 'core/mis_pedidos.html', {'pedidos': pedidos})
+
+
 def page_not_found_view(request, exception):
     return render(request, 'core/404.html', status=404)
 

@@ -55,26 +55,11 @@
 </head>
 <body>
     <div class="container mt-5 text-center">
-        <h2>✅ ¡Gracias por tu pedido!</h2>
-        <p>Tu pedido N° <strong>{{ pedido_id }}</strong> fue registrado correctamente.</p>
-        <p>Monto total: <strong>${{ monto }}</strong></p>
-        <p>Una vez validada tu transferencia, recibirás una notificación.</p>
-        <a href="{% url 'home' %}" class="btn btn-primary mt-3">Volver al inicio</a>
+        <h2 class="text-danger">❌ Ocurrió un problema</h2>
+        <p>{{ mensaje }}</p>
+        <a href="{% url 'pago_transferencia' %}" class="btn btn-secondary mt-3">Volver al formulario</a>
     </div>
     <!-- Bootstrap JS (opcional) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    // Borrar el carrito y los datos relacionados del sessionStorage
-    sessionStorage.removeItem("shoppingCart");
-    sessionStorage.removeItem("cart_total");
-    sessionStorage.removeItem("pedido_id");
-    sessionStorage.removeItem("tipo_entrega");
-    </script>
-    <script>
-        // Redirigir al usuario a la página de inicio después de 5 segundos
-        setTimeout(function() {
-            window.location.href = "{% url 'home' %}";
-        }, 5000);
-    </script>
 </body>
 </html>

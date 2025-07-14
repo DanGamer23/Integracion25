@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cartTotalElement = document.getElementById('cart-total');
     const checkoutButton = document.getElementById('checkout-button');
     const shoppingCartModalElement = document.getElementById('shoppingCartModal');
+    const transferButton = document.getElementById("transfer-button");
     const shoppingCartModal = new bootstrap.Modal(shoppingCartModalElement); // Inicializa el objeto modal
 
     // ** IMPORTANTE: URL base de tu API de Spring Boot **
@@ -167,11 +168,15 @@ document.addEventListener('DOMContentLoaded', function() {
         cartItemsContainer.innerHTML = '';
         if (cart.length === 0) {
             cartEmptyMessage.style.display = 'block';
+            cartItemsContainer.innerHTML = '';  // limpia productos
             cartTotalElement.textContent = formatPrice(0);
             checkoutButton.disabled = true;
+            transferButton.disabled = true; // Deshabilitar botón de transferencia si el carrito está vacío
         } else {
             cartEmptyMessage.style.display = 'none';
+            cartItemsContainer.innerHTML = '';
             checkoutButton.disabled = false;
+            transferButton.disabled = false;
 
             let total = 0;
             cart.forEach(item => {
@@ -201,7 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 cartItemsContainer.appendChild(cartItemDiv);
             });
             cartTotalElement.textContent = formatPrice(total);
-            // Mostrar el total en USD
+
+// Mostrar el total en USD
 const cartTotalUSDContainer = document.getElementById('cart-total-usd');
 if (cartTotalUSDContainer && total > 0) {
     fetch("http://127.0.0.1:8001/api/valor-dolar/")
@@ -773,6 +779,27 @@ function loadBrands() {
     else {
         console.log("No es la página de tienda, ni de inicio, ni de detalle de producto completa. Solo se carga la lógica del carrito.");
     }
+    document.getElementById('transfer-button').addEventListener('click', function () {
+    if (!cart || cart.length === 0) {
+        showToast('El carrito está vacío. Añade productos antes de continuar.', 'warning');
+        return;
+    }
+
+    sessionStorage.setItem("shoppingCart", JSON.stringify(cart));
+
+    let total = 0;
+    cart.forEach(item => {
+        total += item.precio * item.quantity;
+    });
+    sessionStorage.setItem("cart_total", total);
+
+    const tipoEntrega = document.querySelector('input[name="tipo_entrega"]:checked')?.value || "retiro";
+    sessionStorage.setItem("tipo_entrega", tipoEntrega);
+    
+    window.location.href = "/pago-transferencia/";
+    });
+
+    
 
     checkoutButton.addEventListener('click', function () {
         if (!cart || cart.length === 0) {
@@ -803,6 +830,55 @@ function loadBrands() {
             console.error('Error al procesar el pago:', error);
             showToast('No se pudo iniciar el pago. Revisa tu conexión.', 'danger');
         });
+    });
+
+    fetch("/confirmar-transferencia", {
+        method: "POST",
+        body: JSON.stringify({
+            cart: JSON.parse(localStorage.getItem("carrito")),
+            tipo_entrega: "retiro"
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.mensaje);
+        localStorage.removeItem("carrito");
+        window.location.href = "/shop";
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Guardar el tipo de entrega cuando se seleccione
+        const radios = document.querySelectorAll('input[name="tipo_entrega"]');
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                sessionStorage.setItem("tipo_entrega", this.value);
+            });
+        });
+
+        // Valor por defecto (en caso de que no cambien nada)
+        const checkedRadio = document.querySelector('input[name="tipo_entrega"]:checked');
+        if (checkedRadio) {
+            sessionStorage.setItem("tipo_entrega", checkedRadio.value);
+        }
+
+        // Botón de pago por transferencia
+        const btnTransfer = document.getElementById("transfer-button");
+        if (btnTransfer) {
+            btnTransfer.addEventListener("click", function () {
+                window.location.href = "/pago-transferencia/";
+            });
+        }
+
+        // Botón de pago con tarjeta (si lo usas)
+        const btnCheckout = document.getElementById("checkout-button");
+        if (btnCheckout) {
+            btnCheckout.addEventListener("click", function () {
+                window.location.href = "/pago-tarjeta/";
+            });
+        }
     });
 
 

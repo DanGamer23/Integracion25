@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="{% static 'img/icono.ico' %}">
+    <title>Ferremas</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Raleway:wght@600;800&display=swap" rel="stylesheet"> 
+
+    <!-- Icon Font Stylesheet -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="{% static 'lib/lightbox/css/lightbox.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+    
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            margin: 0;
+        }
+        .transfer-card {
+            max-width: 600px;
+            min-height: 700px;
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            background-color: #fff;
+        }
+        .list-group-item {
+            border: none;
+            background-color: #fdfdfd;
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="transfer-card shadow-lg">
+            <h2 class="text-center mb-4">💳 Pago por Transferencia</h2>
+            <p class="text-center mb-4">Por favor, realiza la transferencia a los siguientes datos:</p>
+
+            <ul class="list-group mb-4 rounded-3">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>Banco:</strong> <span>Banco Estado</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>N° Cuenta:</strong> <span>123456789</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>Tipo:</strong> <span>Cuenta Corriente</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>RUT:</strong> <span>12.345.678-9</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>Nombre:</strong> <span>Ferremas SPA</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>Email:</strong> <span>pagos@ferremas.cl</span>
+                </li>
+            </ul>
+
+            <p class="text-center">Una vez realizada la transferencia, envía el comprobante al correo <strong>pagos@ferremas.cl</strong>.</p>
+            <div class="text-center mb-4">
+                <h4 class="text-secondary">Total a pagar</h4>
+                <h1 class="text-success display-4">$<span id="total_monto_texto">0</span></h1>
+            </div>
+            <div class="text-center mt-4">
+                <form method="POST" action="{% url 'confirmar_pago_transferencia' %}" id="form_pago_transferencia" onsubmit="console.log('Carrito enviado:', document.getElementById('cart_input').value)">
+                    {% csrf_token %}
+                    <input type="hidden" name="monto" id="monto_input">
+                    <input type="hidden" name="pedido_id" id="pedido_input">
+                    <input type="hidden" name="tipo_entrega" id="tipo_entrega_input" value="retiro">
+                    <input type="hidden" name="cart" id="cart_input">
+                    <button type="submit" class="btn btn-primary">Confirmé mi Transferencia</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (opcional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const carrito = sessionStorage.getItem("shoppingCart") || "[]";
+                const total = sessionStorage.getItem("cart_total") || 0;
+                const pedidoId = sessionStorage.getItem("pedido_id") || 1;
+                const tipoEntrega = sessionStorage.getItem("tipo_entrega") || "retiro";
+
+                document.getElementById("cart_input").value = carrito;
+                document.getElementById("monto_input").value = total;
+                document.getElementById("pedido_input").value = pedidoId;
+                document.getElementById("tipo_entrega_input").value = tipoEntrega;
+
+                const totalTexto = document.getElementById("total_monto_texto");
+                if (totalTexto) {
+                    totalTexto.textContent = parseInt(total).toLocaleString("es-CL");
+                }
+            });
+        </script>
+
+
+</body>
+</html>

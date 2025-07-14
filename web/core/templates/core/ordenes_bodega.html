@@ -1,0 +1,58 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<h1 class="mt-4">Órdenes en Preparación</h1>
+<hr>
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="m-0 font-weight-bold text-primary">Órdenes Pendientes</h5>
+    </div>
+    <div class="card-body">
+        {% if ordenes %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID Orden</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Entrega</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orden in ordenes %}
+                        <tr>
+                            <td>{{ orden.pedido_id }}</td>
+                            <td>{{ orden.cliente }}</td>
+                            <td>{{ orden.fecha_pedido }}</td>
+                            <td>${{ orden.total|floatformat:0 }}</td>
+                            <td>{{ orden.tipo_entrega|capfirst }}</td>
+                            <td>{{ orden.estado_legible }}</td>
+                            <td>
+                                {% if orden.estado == "En preparación" %}
+                                <form method="POST" action="{% url 'aceptar_preparacion' orden.pedido_id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm">Aceptar y Preparar</button>
+                                </form>
+                                {% endif %}
+                                {% if orden.estado == "Preparando" %}
+                                <form method="POST" action="{% url 'entregar_a_vendedor' orden.pedido_id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">Entregar a Vendedor</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No hay órdenes en preparación.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

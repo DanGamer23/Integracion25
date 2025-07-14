@@ -25,6 +25,24 @@ INCREMENT BY 1
 NOCACHE
 NOCYCLE;
 
+CREATE SEQUENCE seq_pedido_id
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+CREATE SEQUENCE seq_pago_id
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+CREATE SEQUENCE seq_detalle_pedido_id
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
 -- Tabla ROL
 CREATE TABLE ROL (
     rol_id NUMBER(1) PRIMARY KEY,
@@ -244,11 +262,11 @@ INSERT INTO PRODUCTO (producto_id, nombre, descripcion, precio, categoria_id, ma
 VALUES (25, 'Juego de Brocas para Concreto', 'Set de 5 brocas SDS Plus para concreto y ladrillo. Medidas de 6mm a 12mm.', 20000, 2, 101, '/static/img/productos/brocas_concreto_bosch.jpg');
 
 -- Pedido de prueba
-INSERT INTO PEDIDO (pedido_id, cliente_id, fecha_pedido, estado, total, vendedor_id)
-VALUES (100, 1, SYSDATE, 'Aprobado', 15000, 2);
+INSERT INTO PEDIDO (pedido_id, cliente_id, fecha_pedido, estado, total, vendedor_id, tipo_entrega)
+VALUES (100, 1, SYSDATE, 'Aprobado', 15000, 2, 'despacho');
 
-INSERT INTO PEDIDO (pedido_id, cliente_id, fecha_pedido, estado, total, vendedor_id)
-VALUES (101, 1, SYSDATE, 'Pendiente', 15000, 2);
+INSERT INTO PEDIDO (pedido_id, cliente_id, fecha_pedido, estado, total, vendedor_id, tipo_entrega)
+VALUES (101, 1, SYSDATE, 'Pendiente', 15000, 2, 'retiro');
 
 INSERT INTO PAGO (pago_id, pedido_id, monto, fecha_pago, contador_id, metodo_pago, estado_pago)
 VALUES (200, 100, 15000, SYSDATE, 3, 'Tarjeta de Crédito', 'Aprobado');
@@ -258,6 +276,9 @@ VALUES (201, 101, 25000, SYSDATE, null, 'Transferencia', 'Pendiente');
 
 ALTER TABLE PRODUCTO ADD CONSTRAINT UNQ_PRODUCTO_NOMBRE UNIQUE (nombre);
 
+ALTER TABLE PEDIDO ADD (TIPO_ENTREGA VARCHAR2(50));
+
+ALTER TABLE PEDIDO MODIFY vendedor_id NUMBER(10) NULL;
 
 COMMIT;
 

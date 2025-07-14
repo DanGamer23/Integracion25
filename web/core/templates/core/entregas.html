@@ -1,0 +1,66 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<h1 class="mt-4">Entregas de Pedidos</h1>
+<hr>
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="m-0 font-weight-bold text-primary">Órdenes para Entregar</h5>
+    </div>
+    <div class="card-body">
+        {% if entregas %}
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Tipo Entrega</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in entregas %}
+                    <tr>
+                        <td>{{ pedido.pedido_id }}</td>
+                        <td>{{ pedido.cliente }}</td>
+                        <td>{{ pedido.fecha_pedido }}</td>
+                        <td>${{ pedido.total|floatformat:0 }}</td>
+                        <td>{{ pedido.tipo_entrega|capfirst }}</td>
+                        <td>{{ pedido.estado }}</td>
+                        <td>
+                            {% if pedido.estado == "Listo" %}
+                                {% if pedido.tipo_entrega == "retiro" %}
+                                    <form method="POST" action="{% url 'marcar_entregado' pedido.pedido_id %}">
+                                        {% csrf_token %}
+                                        <button class="btn btn-success btn-sm">Entregado</button>
+                                    </form>
+                                {% else %}
+                                    <form method="POST" action="{% url 'marcar_enviado' pedido.pedido_id %}">
+                                        {% csrf_token %}
+                                        <button class="btn btn-warning btn-sm">Marcar como Enviado</button>
+                                    </form>
+                                {% endif %}
+                            {% elif pedido.estado == "Enviado" %}
+                                <form method="POST" action="{% url 'marcar_entregado' pedido.pedido_id %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-success btn-sm">Marcar como Entregado</button>
+                                </form>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>No hay pedidos listos para entrega.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+    <h1 class="mt-4">Gestión de Pedidos</h1>
+    <hr>
+
+    {% if request.GET.error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ request.GET.error }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5 class="m-0 font-weight-bold text-primary">Listado de Pedidos</h5>
+        </div>
+        <div class="card-body">
+            {% if pedidos %}
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID Pedido</th>
+                                <th>Cliente</th>
+                                <th>Fecha Pedido</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                                <th>Tipo Entrega</th>
+                                <th>Acciones</th>
+                                <!-- Agrega columnas extras si necesitas -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos %}
+                            <tr>
+                                <td>{{ pedido.pedido_id }}</td>
+                                <td>{{ pedido.cliente }}</td>
+                                <td>{{ pedido.fecha_pedido }}</td>
+                                <td>{{ pedido.estado }}</td>
+                                <td>${{ pedido.total|floatformat:0 }}</td>
+                                <td>{{ pedido.tipo_entrega|capfirst }}</td>
+                                <td>
+                                    {% if pedido.estado == "Pendiente" %}
+                                    <form method="POST" action="{% url 'aprobar_pedido' pedido.pedido_id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" name="accion" value="aprobar" class="btn btn-success btn-sm">Aprobar</button>
+                                    </form>
+                                    <form method="POST" action="{% url 'aprobar_pedido' pedido.pedido_id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" name="accion" value="rechazar" class="btn btn-danger btn-sm">Rechazar</button>
+                                    </form>
+                                    {% else %}
+                                    
+                                    {% endif %}
+                                    {% if pedido.estado == "Aprobado" %}
+                                    <form method="POST" action="{% url 'enviar_a_bodega' pedido.pedido_id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning btn-sm">Enviar a Bodega</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if pedido.estado == "Rechazado" %}
+                                     -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No hay pedidos registrados.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

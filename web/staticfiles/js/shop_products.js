@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cartTotalElement = document.getElementById('cart-total');
     const checkoutButton = document.getElementById('checkout-button');
     const shoppingCartModalElement = document.getElementById('shoppingCartModal');
+    const transferButton = document.getElementById("transfer-button");
     const shoppingCartModal = new bootstrap.Modal(shoppingCartModalElement); // Inicializa el objeto modal
 
     // ** IMPORTANTE: URL base de tu API de Spring Boot **
@@ -26,6 +27,27 @@ document.addEventListener('DOMContentLoaded', function() {
             minimumFractionDigits: 0
         }).format(price);
     }
+
+    // Función para mostrar valor en USD
+    function formatUSD(amount) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+    }).format(amount);
+    }
+
+    async function obtenerValorDolar() {
+    try {
+        const response = await fetch("/api/valor-dolar/");
+        const data = await response.json();
+        return data.valor_dolar || null;
+    } catch (error) {
+        console.error("Error al obtener el valor del dólar:", error);
+        return null;
+    }
+}
+
 
     // Función para mostrar Toasts (NOTIFICACIONES)
     function showToast(message, type = 'success') {
@@ -141,14 +163,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderCartModalContent() {
+        console.log("⚠️ renderCartModalContent se está ejecutando");
+
         cartItemsContainer.innerHTML = '';
         if (cart.length === 0) {
             cartEmptyMessage.style.display = 'block';
+            cartItemsContainer.innerHTML = '';  // limpia productos
             cartTotalElement.textContent = formatPrice(0);
             checkoutButton.disabled = true;
+            transferButton.disabled = true; // Deshabilitar botón de transferencia si el carrito está vacío
         } else {
             cartEmptyMessage.style.display = 'none';
+            cartItemsContainer.innerHTML = '';
             checkoutButton.disabled = false;
+            transferButton.disabled = false;
 
             let total = 0;
             cart.forEach(item => {
@@ -178,10 +206,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 cartItemsContainer.appendChild(cartItemDiv);
             });
             cartTotalElement.textContent = formatPrice(total);
-        }
-        updateCartCounter();
-    }
 
+// Mostrar el total en USD
+const cartTotalUSDContainer = document.getElementById('cart-total-usd');
+if (cartTotalUSDContainer && total > 0) {
+    fetch("http://127.0.0.1:8001/api/valor-dolar/")
+        .then(response => response.json())
+        .then(data => {
+            console.log("📦 Dólar recibido:", data);
+
+            const valorDolar = parseFloat(data.valor_dolar);
+            if (valorDolar && !isNaN(valorDolar)) {
+                const totalUSD = total / valorDolar;
+                console.log("💵 totalCLP:", total, "valor_dolar:", valorDolar, "→ totalUSD:", totalUSD);
+
+                cartTotalUSDContainer.textContent = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(totalUSD);
+            } else {
+                console.warn("⚠️ valor_dolar inválido:", data.valor_dolar);
+                cartTotalUSDContainer.textContent = "USD N/D";
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error al obtener el valor del dólar:", error);
+            cartTotalUSDContainer.textContent = "USD N/D";
+        });
+} else if (cartTotalUSDContainer) {
+    cartTotalUSDContainer.textContent = "$0.00";
+}}
+
+    }
     function updateCartCounter() {
         const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         cartCounter.textContent = itemCount;
@@ -649,7 +705,7 @@ function loadBrands() {
     });
 
     // Evento para cuando se abre el modal del carrito
-    shoppingCartModalElement.addEventListener('show.bs.modal', renderCartModalContent);
+    shoppingCartModalElement.addEventListener('shown.bs.modal', renderCartModalContent);
 
     // --- Inicialización al cargar la página ---
     loadCart(); // SIEMPRE cargar el carrito desde sessionStorage al inicio de CUALQUIER página
@@ -723,6 +779,27 @@ function loadBrands() {
     else {
         console.log("No es la página de tienda, ni de inicio, ni de detalle de producto completa. Solo se carga la lógica del carrito.");
     }
+    document.getElementById('transfer-button').addEventListener('click', function () {
+    if (!cart || cart.length === 0) {
+        showToast('El carrito está vacío. Añade productos antes de continuar.', 'warning');
+        return;
+    }
+
+    sessionStorage.setItem("shoppingCart", JSON.stringify(cart));
+
+    let total = 0;
+    cart.forEach(item => {
+        total += item.precio * item.quantity;
+    });
+    sessionStorage.setItem("cart_total", total);
+
+    const tipoEntrega = document.querySelector('input[name="tipo_entrega"]:checked')?.value || "retiro";
+    sessionStorage.setItem("tipo_entrega", tipoEntrega);
+    
+    window.location.href = "/pago-transferencia/";
+    });
+
+    
 
     checkoutButton.addEventListener('click', function () {
         if (!cart || cart.length === 0) {
@@ -753,6 +830,55 @@ function loadBrands() {
             console.error('Error al procesar el pago:', error);
             showToast('No se pudo iniciar el pago. Revisa tu conexión.', 'danger');
         });
+    });
+
+    fetch("/confirmar-transferencia", {
+        method: "POST",
+        body: JSON.stringify({
+            cart: JSON.parse(localStorage.getItem("carrito")),
+            tipo_entrega: "retiro"
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.mensaje);
+        localStorage.removeItem("carrito");
+        window.location.href = "/shop";
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Guardar el tipo de entrega cuando se seleccione
+        const radios = document.querySelectorAll('input[name="tipo_entrega"]');
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                sessionStorage.setItem("tipo_entrega", this.value);
+            });
+        });
+
+        // Valor por defecto (en caso de que no cambien nada)
+        const checkedRadio = document.querySelector('input[name="tipo_entrega"]:checked');
+        if (checkedRadio) {
+            sessionStorage.setItem("tipo_entrega", checkedRadio.value);
+        }
+
+        // Botón de pago por transferencia
+        const btnTransfer = document.getElementById("transfer-button");
+        if (btnTransfer) {
+            btnTransfer.addEventListener("click", function () {
+                window.location.href = "/pago-transferencia/";
+            });
+        }
+
+        // Botón de pago con tarjeta (si lo usas)
+        const btnCheckout = document.getElementById("checkout-button");
+        if (btnCheckout) {
+            btnCheckout.addEventListener("click", function () {
+                window.location.href = "/pago-tarjeta/";
+            });
+        }
     });
 
 

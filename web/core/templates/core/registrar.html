@@ -33,4 +33,11 @@
 <div class="text-center mt-3">
     <a href="{% url 'login' %}">¿Ya tienes cuenta? Inicia sesión</a>
 </div>
+
+<script>
+    // Esto garantiza que el carrito no persista entre sesiones de usuarios distintos
+    localStorage.removeItem("carrito");
+    sessionStorage.clear();  // También puedes usar esto si quieres limpiar todo
+</script>
+
 {% endblock %}
