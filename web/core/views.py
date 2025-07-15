@@ -363,6 +363,9 @@ def panel_admin_inicio(request):
     })
 
 def admin_listado_usuarios(request):
+    user = request.session.get('user')
+    if not user or user.get('rol_id') != 5:
+        return redirect('panel_admin_inicio')
     try:
         response = requests.get("http://ferremas-api1:8000/clientes/")
         if response.status_code == 200:
@@ -543,6 +546,9 @@ def admin_cambiar_rol(request, usuario_id):
         return redirect("admin_listado_usuarios")
 
 def listar_productos(request):
+    user = request.session.get("user")
+    if not user or user.get("rol_id") != 2 and user.get("rol_id") != 5:
+        return redirect("panel_admin_inicio") 
     productos_url = "http://ferremas-api2:8080/productos"
     categorias_url = "http://ferremas-api2:8080/categorias"
     marcas_url = "http://ferremas-api2:8080/marcas"
@@ -688,7 +694,9 @@ def logout_view(request):
 
 
 def ventas(request):
-
+    user = request.session.get("user")
+    if not user or user.get("rol_id") != 3 and user.get("rol_id") != 5:
+        return redirect("panel_admin_inicio") 
     
     response = requests.get("http://ferremas-api1:8000/pagos/listar")
     if response.status_code == 200:
@@ -700,7 +708,6 @@ def ventas(request):
 
 
 def aprobar_venta(request, pago_id):
-    print("### APROBANDO PAGO ###")  # VERIFICAR SI SE IMPRIME ESTO
 
     if request.method == "POST":
         contador_id = request.session.get('user', {}).get('id_usuario') # Obtener el ID del contador desde la sesión
@@ -806,8 +813,8 @@ def confirmar_transferencia(request):
 
 def listar_pedidos_admin(request):
     user = request.session.get("user")
-    if not user or user.get("rol_id", 1) == 1:
-        return redirect("/")  # Solo para usuarios no clientes y logueados
+    if not user or user.get("rol_id") != 2 and user.get("rol_id") != 5:
+        return redirect("panel_admin_inicio") 
 
     try:
         response = requests.get("http://ferremas-api1:8000/pedidos/listar")
@@ -873,7 +880,7 @@ def enviar_a_bodega_view(request, pedido_id):
 
 def ordenes_bodega_view(request):
     user = request.session.get("user")
-    if not user or user.get("rol_id") != 4 and user.get("rol_id") != 5:
+    if not user or user.get("rol_id") not in [4, 5]:
         return redirect("panel_admin_inicio")  # Solo acceso para bodegueros
 
     try:
@@ -883,7 +890,9 @@ def ordenes_bodega_view(request):
         estado_legible = {
             "En preparación": "No preparado",
             "Preparando": "Preparando",
-            "Listo": "Listo para entrega"
+            "Listo": "Listo para entrega",
+            "Enviado": "Enviado",
+            "Entregado": "Entregado"
         }
         for pedido in pedidos:
             fecha_str = pedido.get("fecha_pedido")
@@ -899,7 +908,8 @@ def ordenes_bodega_view(request):
         pedidos = []
 
     return render(request, "core/ordenes_bodega.html", {
-        "ordenes": pedidos
+        "ordenes": pedidos,
+        "api_base": "http://ferremas-api1:8000"
     })
 
 @csrf_exempt
@@ -968,6 +978,9 @@ def marcar_entregado_view(request, pedido_id):
     return redirect("listar_entregas")
 
 def reportes_view(request):
+    user = request.session.get("user")
+    if not user or user.get("rol_id") != 3 and user.get("rol_id") != 5:
+        return redirect("panel_admin_inicio") 
     return render(request, "core/reportes.html")
 
 import logging
@@ -975,6 +988,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 def generar_reporte_view(request):
+    user = request.session.get("user")
+    if not user or user.get("rol_id") != 3 and user.get("rol_id") != 5:
+        return redirect("panel_admin_inicio") 
     tipo = request.GET.get("tipo")
     fecha_str = request.GET.get("fecha")
 

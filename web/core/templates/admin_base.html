@@ -71,20 +71,12 @@
                 <a class="nav-link {% if '/panel/entregas/' in request.path %}active{% endif %}" href="/panel/entregas/">
                     <span class="icon">🚚</span> Entregas
                 </a>
-                {% if request.session.user %}
-                    {% if request.session.user.rol_id == 3 or request.session.user.rol_id == 5 %}
-                    <a class="nav-link {% if '/panel/reportes/' in request.path %}active{% endif %}" href="/panel/reportes/">
-                        <span class="icon">📈</span> Reportes
-                    </a>
-                    {% endif %}
-                {% endif %}
-                {% if request.session.user %}
-                    {% if request.session.user.rol_id == 3 or request.session.user.rol_id == 5 %}
-                    <a class="nav-link {% if '/panel/ventas/' in request.path %}active{% endif %}"  href="/panel/ventas/">
-                        <span class="icon">🧾</span> Ventas
-                    </a>
-                    {% endif %}
-                {% endif %}
+                <a class="nav-link {% if '/panel/reportes/' in request.path %}active{% endif %}" href="/panel/reportes/">
+                    <span class="icon">📈</span> Reportes
+                </a>
+                <a class="nav-link {% if '/panel/ventas/' in request.path %}active{% endif %}"  href="/panel/ventas/">
+                    <span class="icon">🧾</span> Ventas
+                </a>
                 <a class="nav-link {% if '/panel/usuarios/' in request.path %}active{% endif %}" href="/panel/usuarios/">
                     <span class="icon">👥</span> Usuarios
                 </a>

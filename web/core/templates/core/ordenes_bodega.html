@@ -19,6 +19,7 @@
                             <th>Total</th>
                             <th>Entrega</th>
                             <th>Estado</th>
+                            <th>Productos</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
@@ -31,6 +32,12 @@
                             <td>${{ orden.total|floatformat:0 }}</td>
                             <td>{{ orden.tipo_entrega|capfirst }}</td>
                             <td>{{ orden.estado_legible }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-outline-info btn-sm" data-bs-toggle="collapse" data-bs-target="#productos-{{ orden.pedido_id }}">
+                                    Ver productos
+                                </button>
+                            </td>
+
                             <td>
                                 {% if orden.estado == "En preparación" %}
                                 <form method="POST" action="{% url 'aceptar_preparacion' orden.pedido_id %}" style="display:inline;">
@@ -46,6 +53,13 @@
                                 {% endif %}
                             </td>
                         </tr>
+                        <tr class="collapse bg-light" id="productos-{{ orden.pedido_id }}">
+                            <td colspan="8">
+                                <div id="contenido-productos-{{ orden.pedido_id }}" class="py-2 px-3 text-muted">
+                                    <em>Cargando productos...</em>
+                                </div>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -55,4 +69,45 @@
         {% endif %}
     </div>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const botones = document.querySelectorAll("[data-bs-toggle='collapse']");
+
+    botones.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const target = btn.getAttribute("data-bs-target");
+            const pedidoId = target.replace("#productos-", "");
+            const contenedor = document.getElementById(`contenido-productos-${pedidoId}`);
+
+            if (contenedor.dataset.loaded === "true") return;
+
+            fetch(`http://localhost:8000/pedidos/detalle-productos/${pedidoId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        contenedor.innerHTML = "<em>Este pedido no contiene productos.</em>";
+                    } else {
+                        let html = `<table class="table table-sm table-bordered mb-0">
+                            <thead><tr><th>Producto</th><th>Cantidad</th></tr></thead>
+                            <tbody>`;
+                        data.forEach(p => {
+                            html += `<tr>
+                                <td>${p.nombre}</td>
+                                <td>${p.cantidad}</td>
+                            </tr>`;
+                        });
+                        html += "</tbody></table>";
+                        contenedor.innerHTML = html;
+                    }
+                    contenedor.dataset.loaded = "true";
+                })
+                .catch(() => {
+                    contenedor.innerHTML = "<span class='text-danger'>Error al cargar productos.</span>";
+                });
+        });
+    });
+});
+</script>
+
+
 {% endblock %}

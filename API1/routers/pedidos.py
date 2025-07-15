@@ -163,7 +163,7 @@ def listar_en_preparacion():
                 FROM pedido p
                 JOIN usuario c ON p.cliente_id = c.id_usuario
                 LEFT JOIN usuario v ON p.vendedor_id = v.id_usuario
-                WHERE LOWER(p.estado) IN ('en preparación', 'preparando', 'listo')
+                WHERE LOWER(p.estado) IN ('en preparación', 'preparando', 'listo', 'enviado', 'entregado')
                 ORDER BY p.fecha_pedido DESC
             """)
             rows = cursor.fetchall()
@@ -181,6 +181,30 @@ def listar_en_preparacion():
                     "tipo_entrega": row[8] or "No especificado"
                 })
             return result
+
+@router.get("/detalle-productos/{pedido_id}")
+def obtener_productos_pedido(pedido_id: int):
+    with get_conexion() as connection:
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute("""
+                    SELECT 
+                        pr.nombre,
+                        dp.cantidad
+                    FROM detalle_pedido dp
+                    JOIN producto pr ON dp.producto_id = pr.producto_id
+                    WHERE dp.pedido_id = :1
+                """, [pedido_id])
+                rows = cursor.fetchall()
+                return [
+                    {
+                        "nombre": r[0],
+                        "cantidad": r[1],
+                    } for r in rows
+                ]
+            except Exception as e:
+                print(f"Error al obtener productos del pedido {pedido_id}: {e}")
+                raise HTTPException(status_code=500, detail="Error al obtener los productos del pedido")
 
 
 @router.patch("/preparar/{pedido_id}")
